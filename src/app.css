@@ -1,0 +1,215 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+html {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  overflow: hidden;
+}
+body {
+  color: rgb(230, 230, 230);
+  overflow: hidden;
+  overscroll-behavior: none; /* Disable pull-to-refresh */
+  -webkit-overflow-scrolling: touch; /* Maintain smooth scrolling */
+}
+
+#app {
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+a {
+  color: #888;
+}
+button {
+  /* height: 32px; */
+  background-color: #6c6c6c;
+  color: white;
+  border: 1px solid black;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+/* input {
+  height: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #222;
+  color: white;
+  height: 32px;
+} */
+input:focus, select:focus {
+  outline: none;
+  border-color: #888;
+}
+
+
+.appContainer {
+  height: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.keyContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+.keyContainer .left {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.keyContainer .right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.messagesContainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  min-height: 0;
+  min-width: 0;
+  scrollbar-gutter: stable;
+
+  border-top: 1px solid white;
+  /* border-bottom: 1px solid white; */
+}
+.messagesContainer .message {
+  margin-bottom: 8px;
+  /* border-bottom: 1px solid #444; */
+}
+/* .messagesContainer .message:last-child {
+  border-bottom: none;
+} */
+.messagesContainer .message .messageHeader {
+  width: fit-content;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+.messagesContainer .message .messageHeader strong {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.messagesContainer .message .messageHeader span {
+  font-size: 0.8em;
+}
+.messagesContainer .message .messageContent {
+  font-size: 1em;
+  word-wrap: break-word;
+}
+
+
+.buttonContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+
+.channelContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* gap: 8px;
+  padding: 2px; */
+  /* margin-bottom: 4px; */
+}
+.channelContainer form {
+  display: flex;
+  /* flex: 1; */
+  gap: 8px;
+}
+/* .channelContainer input {
+  height: 40px;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #222;
+  color: white;
+} */
+.channelContainer select {
+  height: 40px;
+  max-width: 120px;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  background-color: #222;
+  color: white;
+  margin-right: 8px;
+}
+.channelContainer select:focus {
+  outline: none;
+  border-color: #ccc;
+}
+.channelContainer input:focus {
+  outline: none;
+  border-color: #888;
+}
+.channelContainer button {
+  flex-shrink: 0;
+}
+
+
+.userInputContainer {
+  width: 100%;
+  display: flex;
+  /* gap: 8px;
+  padding: 2px; */
+}
+.userInputContainer form {
+  display: flex;
+  flex: 1;
+  /* gap: 8px; */
+}
+.userInputContainer .sendButton {
+  width: 64px;
+  border: 1px solid #ccc;
+  border-left: 0;
+  background-color: #222;
+}
+.userInputContainer input {
+  height: 44px;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #222;
+  color: white;
+}
+.userInputContainer input:focus {
+  outline: none;
+  border-color: #ccc;
+}
+.userInputContainer button {
+  flex-shrink: 0;
+}
