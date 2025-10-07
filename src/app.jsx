@@ -5,18 +5,20 @@ import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } fro
 import { 
   Lock, Settings, SendHorizontal, Earth, Map, 
   Pickaxe, ArrowBigLeft, House, Key, User, 
-  Link, Signal, SignalZero, Image, Telescope
+  Link, Signal, SignalZero, Image, Telescope,
+  ShoppingCart
 } from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
 // import geohash from 'ngeohash';
 import LanderTab from './tabs/lander/Lander.jsx';
-import ExploreTab from './tabs/explore/Explore.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
+import ExploreTab from './tabs/explore/Explore.jsx';
+import MarketTab from './tabs/market/Market.jsx';
 
 const config = {
-  version: '0.0.2',
+  version: '0.0.3',
   relays: [
-    'wss://tr7b9d5l-8080.usw2.devtunnels.ms', 
+    'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
     'wss://relay.damus.io', 
     'wss://relay.nostr.band', 
     'wss://nostr-relay.zimage.com', 
@@ -28,7 +30,7 @@ const config = {
   favoriteChannels: [],
   powDifficulty: 8,
   encryptionKey: 'minchat-demo-key-0001',
-  imagesEnabled: true
+  imagesEnabled: false
 };
 
 export default function App() {
@@ -192,7 +194,8 @@ export default function App() {
         limit: 100
       };
 
-    subRef.current = poolRef.current.subscribeMany(config.relays, filter, {
+    const relays = config.relays;
+    subRef.current = poolRef.current.subscribeMany(relays, filter, {
       onevent(e) {
         const d = new Date(e.created_at * 1000);
         setMessages(prev => {
@@ -294,8 +297,9 @@ export default function App() {
       poolRef.current = new SimplePool();
     }
 
+    const relays = config.relays;
     await poolRef.current.publish(
-      config.relays,
+      relays,
       signed
     );
     setMessage('');
@@ -310,7 +314,6 @@ export default function App() {
       />
     );
   }
-
 
   // EXPLORE TAB
   const [exploreTabOpen, setexploreTabOpen] = useState(() => {
@@ -350,6 +353,53 @@ export default function App() {
         setLastFetchedDatestamp={setLastFetchedDatestamp}
         setLongformTag={setLongformTag}
         longformTag={longformTag}
+      />
+    );
+  }
+
+
+  // MARKET TAB
+  const [marketTabOpen, setMarketTabOpen] = useState(() => {
+    const saved = localStorage.getItem('minchat-market-tab-open');
+    return saved ? JSON.parse(saved) : false;
+  });
+  useEffect(() => { localStorage.setItem('minchat-market-tab-open', JSON.stringify(marketTabOpen)); }, [marketTabOpen]);
+  
+  const [marketPosts, setMarketPosts] = useState(() => {
+    const saved = localStorage.getItem('minchat-market-posts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => { localStorage.setItem('minchat-market-posts', JSON.stringify(marketPosts)); }, [marketPosts]);
+  
+  const [lastFetchedMarketDatestamp, setLastFetchedMarketDatestamp] = useState(() => {
+    const saved = localStorage.getItem('minchat-market-last-fetched-datestamp');
+    return saved ? JSON.parse(saved) : null;
+  });
+  useEffect(() => { localStorage.setItem('minchat-market-last-fetched-datestamp', JSON.stringify(lastFetchedMarketDatestamp)); }, [lastFetchedMarketDatestamp]);
+  
+  const [loadingMarket, setLoadingMarket] = useState(false);
+  
+  const [marketTag, setMarketTag] = useState(() => {
+    const saved = localStorage.getItem('minchat-market-tag');
+    return saved ? JSON.parse(saved) : '';
+  });
+  useEffect(() => { localStorage.setItem('minchat-market-tag', JSON.stringify(marketTag)); }, [marketTag]);
+  
+  if (marketTabOpen) {
+    return (
+      <MarketTab
+        config={config}
+        poolRef={poolRef}
+        marketTabOpen={marketTabOpen}
+        setMarketTabOpen={setMarketTabOpen}
+        marketPosts={marketPosts}
+        setMarketPosts={setMarketPosts}
+        loadingMarket={loadingMarket}
+        setLoadingMarket={setLoadingMarket}
+        lastFetchedMarketDatestamp={lastFetchedMarketDatestamp}
+        setLastFetchedMarketDatestamp={setLastFetchedMarketDatestamp}
+        marketTag={marketTag}
+        setMarketTag={setMarketTag}
       />
     );
   }
@@ -501,7 +551,7 @@ export default function App() {
             <Settings size={16} />
           </button>
         </div>
-        <div style="margin-right: 8px;">
+        {/* <div style="margin-right: 8px;">
           <button
             onClick={() => {
               const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
@@ -514,12 +564,19 @@ export default function App() {
           >
             <Image size={16} />
           </button>
-        </div>
+        </div> */}
         <div style="margin-right: 8px;">
           <button
             onClick={() => setexploreTabOpen(true)}
           >
             <Telescope size={16} />
+          </button>
+        </div>
+        <div style="margin-right: 8px;">
+          <button
+            onClick={() => setMarketTabOpen(true)}
+          >
+            <ShoppingCart size={16} />
           </button>
         </div>
         <div>
@@ -536,13 +593,13 @@ export default function App() {
               #9q
             </button>
         </div>
-        <div>
+        {/* <div>
             <button
               onClick={() => setChannel('6g')}
             >
               #6g
             </button>
-        </div>
+        </div> */}
         <div>
             <button
               onClick={() => setChannel('nostr')}
@@ -558,11 +615,25 @@ export default function App() {
       </div>
       <div class="userInputContainer">
         <form onSubmit={(e) => { e.preventDefault(); send(); }}>
+          <button
+            type="button"
+            onClick={() => {
+              const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
+              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) 
+                // && /\.(png|jpg|jpeg|gif|svg)$/i.test(imageUrl)
+              ) {
+                setMessage(message + ` ![Image](${imageUrl})`);
+              }
+            }}
+            class="sendButton"
+            style="width: 45px; border-left: 1px solid #ccc; border-right: none;"
+          >
+            <Image size={16} />
+          </button>
           <input
             type="text"
             value={message}
             onInput={(e) => setMessage(e.target.value)}
-            // onKeyPress={(e) => e.key === 'Enter' && send()}
             placeholder="Message"
             class=""
           />

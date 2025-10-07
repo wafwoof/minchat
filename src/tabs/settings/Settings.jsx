@@ -265,7 +265,7 @@ export default function SettingsTab({
         </a>
         <br /><br />
         <p>
-          MinChat v{config.version} - A minimal Nostr client by Nietzsche Labs
+          MinChat v{config.version} -  minimal nostr hybrid client thing by Nietzsche Labs
         </p>
       </div>
     </section>
