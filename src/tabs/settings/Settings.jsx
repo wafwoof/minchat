@@ -32,21 +32,24 @@ export default function SettingsTab({
           Change Channel:
         </p>
         <form onSubmit={(e) => { e.preventDefault(); changeChannel(); }}>
-          <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-            {![...config.favoriteChannels, ...config.kind1Channels, ...config.kind20000Channels].includes(channel) && (
+          <select 
+            value={channel} 
+            onChange={(e) => setChannel(e.target.value)}
+          >
+            {/* {![...config.favoriteChannels, ...config.kind1Channels, ...config.kind20000Channels].includes(channel) && (
               <option value={channel}>#{channel}</option>
             )}
             {![...config.favoriteChannels, ...config.kind1Channels, ...config.kind20000Channels].includes(channel) && (
               <option disabled>──────────</option>
-            )}
-            {config.favoriteChannels.map(ch => (
+            )} */}
+            {/* {config.favoriteChannels.map(ch => (
               <option value={ch}>#{ch}</option>
-            ))}
-            <option disabled>──────────</option>
+            ))} */}
+            <option disabled>Kind 1:</option>
             {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
               <option value={ch}>#{ch}</option>
             ))}
-            <option disabled>──────────</option>
+            <option disabled>Kind 20000/23333:</option>
             {config.kind20000Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
               <option value={ch}>#{ch}</option>
             ))}

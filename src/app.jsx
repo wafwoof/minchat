@@ -23,9 +23,9 @@ const config = {
     'wss://offchain.pub',
     'wss://relay-testnet.k8s.layer3.news'
   ],
-  kind1Channels: ['nostr', 'grownostr', 'bitcoin','general', 'random'],
-  kind20000Channels: ['minchat', 'crypto', '9q', 'c2', 'dr', 'test', 'tech'],
-  favoriteChannels: ['minchat', '9q', 'c2', 'dr'],
+  kind1Channels: ['nostr', 'grownostr', 'bitcoin','general', 'random', 'tech'],
+  kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
+  favoriteChannels: [],
   powDifficulty: 8,
   encryptionKey: 'minchat-demo-key-0001',
   imagesEnabled: true
@@ -527,6 +527,13 @@ export default function App() {
               onClick={() => setChannel('9q')}
             >
               #9q
+            </button>
+        </div>
+        <div>
+            <button
+              onClick={() => setChannel('6g')}
+            >
+              #6g
             </button>
         </div>
         <div>
