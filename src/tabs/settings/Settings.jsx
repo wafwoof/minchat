@@ -91,7 +91,7 @@ export default function SettingsTab({
               if (confirm(`This geohash is a ~300k² mile area (with you inside).\nWould you like to go to this channel?\n\n#${geohashCode}`)) {
                 setChannel(geohashCode);
               }
-              setChannel(geohashCode);
+              // setChannel(geohashCode);
             }, (error) => {
               console.error('Error getting location:', error);
               alert('Error getting location: ' + error.message);
@@ -113,7 +113,7 @@ export default function SettingsTab({
               if (confirm(`This geohash is a ~3² mile area (with you inside).\nWould you like to go to this channel?\n\n#${geohashCode}`)) {
                 setChannel(geohashCode);
               }
-              setChannel(geohashCode);
+              // setChannel(geohashCode);
             }, (error) => {
               console.error('Error getting location:', error);
               alert('Error getting location: ' + error.message);
