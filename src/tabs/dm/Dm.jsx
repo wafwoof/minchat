@@ -533,8 +533,6 @@ export default function DmTab({
                         padding: 8px;
                         background: ${msg.isSelf ? '#2a2a2a' : '#222'};
                         color: white;
-                        border-left: ${msg.isSelf ? 'none' : '2px solid #444'};
-                        border-right: ${msg.isSelf ? '2px solid #444' : 'none'};
                         font-size: 14px;
                         word-wrap: break-word;
                       `}
