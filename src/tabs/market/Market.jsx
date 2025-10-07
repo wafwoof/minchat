@@ -1,4 +1,4 @@
-import { ArrowBigLeft, RotateCcw, Telescope, ShoppingCart } from 'lucide-preact';
+import { X, RotateCcw, Telescope, ShoppingCart } from 'lucide-preact';
 import { useState } from 'preact/hooks';
 
 export default function MarketTab({ 
@@ -26,7 +26,14 @@ export default function MarketTab({
       filter['#t'] = [marketTag];
     }
 
-    const sub = poolRef.current.subscribeMany(config.relays, filter, {
+    const relays = [
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+      'wss://purplepag.es',
+      'wss://relay.primal.net',
+      'wss://relay.nostr.band'
+    ];
+    const sub = poolRef.current.subscribeMany(relays, filter, {
       onevent(e) {
         console.log('Market event:', e);
         const post = {
@@ -84,8 +91,11 @@ export default function MarketTab({
             <ShoppingCart size={20} />
             <h3>Market Explorer (NIP-99)</h3>
           </div>
-          <button onClick={() => setMarketTabOpen(false)}>
-            <ArrowBigLeft size={16} />
+          <button 
+            onClick={() => setMarketTabOpen(false)}
+            style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
+          >
+            <X size={16} />
           </button>
         </div>
         
@@ -114,7 +124,7 @@ export default function MarketTab({
           )}
         </div>
 
-        <div style="max-height: 80vh; overflow-y: auto;">
+        <div style="max-height: 88dvh; overflow-y: auto;">
           {marketPosts.length === 0 && !loadingMarket && (
             <p style="color: #aaa;">No listings found.</p>
           )}
@@ -160,6 +170,27 @@ export default function MarketTab({
                 {post.tags.find(t => t[0] === 'contact') && (
                   <div><strong>Contact:</strong> {post.tags.find(t => t[0] === 'contact')[1]}</div>
                 )}
+              </div>
+
+              <div>
+                <button
+                  style={{
+                    background: 'grey',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    fontSize: '0.85em',
+                    marginTop: '40px'
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(post.pubkey);
+                    alert('Pubkey copied! Use this to send a DM via your Nostr client.');
+                  }}
+                >
+                  Copy Pubkey
+                </button>
               </div>
 
               {post.images?.length > 0 && (

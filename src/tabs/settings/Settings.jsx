@@ -1,5 +1,5 @@
 import { 
-  ArrowBigLeft, Earth, Map, User, Pickaxe, Key, Image, Link
+  X, Earth, Map, User, Pickaxe, Key, Image, Link
 } from 'lucide-preact';
 import geohash from 'ngeohash';
 import { useRef } from 'preact/hooks';
@@ -18,8 +18,9 @@ export default function SettingsTab({
         <div style="display: flex; justify-content: flex-end;">
           <button
             onClick={() => setSettingsOpen(false)}
+            style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
           >
-            <ArrowBigLeft size={16} />
+            <X size={16} />
           </button>
         </div>
         <div style="height: 20px;" />

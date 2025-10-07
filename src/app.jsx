@@ -4,9 +4,9 @@ import { render } from 'preact';
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
 import { 
   Lock, Settings, SendHorizontal, Earth, Map, 
-  Pickaxe, ArrowBigLeft, House, Key, User, 
+  Pickaxe, X, House, Key, User, 
   Link, Signal, SignalZero, Image, Telescope,
-  ShoppingCart
+  ShoppingCart, Inbox
 } from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
 // import geohash from 'ngeohash';
@@ -14,9 +14,10 @@ import LanderTab from './tabs/lander/Lander.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
 import ExploreTab from './tabs/explore/Explore.jsx';
 import MarketTab from './tabs/market/Market.jsx';
+import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
-  version: '0.0.3',
+  version: '0.0.4',
   relays: [
     'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
     'wss://relay.damus.io', 
@@ -25,7 +26,7 @@ const config = {
     'wss://offchain.pub',
     'wss://relay-testnet.k8s.layer3.news'
   ],
-  kind1Channels: ['nostr', 'grownostr', 'bitcoin','general', 'random', 'tech'],
+  kind1Channels: ['nostr', 'random', 'tech', 'news', 'art', 'politics'],
   kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
   favoriteChannels: [],
   powDifficulty: 8,
@@ -438,6 +439,29 @@ export default function App() {
   }
 
 
+  // DM TAB
+  const [dmTabOpen, setDmTabOpen] = useState(() => {
+    const saved = localStorage.getItem('minchat-dm-tab-open');
+    return saved ? JSON.parse(saved) : false;
+  });
+  useEffect(() => { localStorage.setItem('minchat-dm-tab-open', JSON.stringify(dmTabOpen)); }, [dmTabOpen]);
+  if (dmTabOpen) {
+    return (
+      <DmTab
+        config={config}
+        poolRef={poolRef}
+        sk={sk}
+        pk={pk}
+        handle={handle}
+        setHandle={setHandle}
+        encryptionKey={encryptionKey}
+        e2eEnabled={e2eEnabled}
+        setDmTabOpen={setDmTabOpen}
+      />
+    );
+  }
+
+
   // MAIN CHAT UI
   return (
     <section class="appContainer">
@@ -549,6 +573,15 @@ export default function App() {
             onClick={() => setSettingsOpen(true)}
           >
             <Settings size={16} />
+          </button>
+        </div>
+        <div style="margin-right: 8px;">
+          <button
+            onClick={() => {
+              setDmTabOpen(true);
+            }}
+          >
+            <Inbox size={16} />
           </button>
         </div>
         {/* <div style="margin-right: 8px;">

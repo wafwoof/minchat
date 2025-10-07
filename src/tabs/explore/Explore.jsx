@@ -1,4 +1,4 @@
-import { ArrowBigLeft, RotateCcw, Telescope, SlidersHorizontal } from 'lucide-preact';
+import { X, RotateCcw, Telescope, SlidersHorizontal } from 'lucide-preact';
 import { useState, useEffect } from 'preact/hooks';
 
 export default function ExploreTab({ 
@@ -85,12 +85,14 @@ export default function ExploreTab({
           <div class="left" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
             <Telescope size={20} />
             <h3>
-              {/* Longform Explorer */}
-              {selectedKind === '30023' ? 'Longform Explorer' : selectedKind === '30818' ? 'Wiki Explorer' : 'Explorer'}
+              {selectedKind === '30023' ? 'Longform Explorer' : selectedKind === '30818' ? 'Wiki Explorer' : '* Explorer'}
             </h3>
           </div>
-          <button onClick={() => setexploreTabOpen(false)}>
-            <ArrowBigLeft size={16} />
+          <button 
+            onClick={() => setexploreTabOpen(false)}
+            style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
+          >
+            <X size={16} />
           </button>
         </div>
         
@@ -130,13 +132,12 @@ export default function ExploreTab({
         <div style="margin: 8px 0;">
           {lastFetchedDatestamp && !loadingLongform && (
             <p style="color: #aaa; font-size: 11px;">
-              {/* Tag: #{longformTag || 'any'} |  */}
               Last fetched ({longformPosts.length}) @ {lastFetchedDatestamp}
             </p>
           )}
         </div>
 
-        <div style="max-height: 80vh; overflow-y: auto;">
+        <div style="max-height: 88dvh; overflow-y: auto;">
           {longformPosts.length === 0 && !loadingLongform && (
             <p style="color: #aaa;">No posts found.</p>
           )}
@@ -150,11 +151,9 @@ export default function ExploreTab({
               <div style="margin-bottom: 8px;">
                 <h4 style="margin: 0; color: #fff;">
                   {post.title}
-                  {post.kind === 30818 && (
-                    <span style="margin-left: 8px; font-size: 0.7em; color: #888; font-weight: normal;">
-                      [Wiki]
-                    </span>
-                  )}
+                  <span style="margin-left: 8px; font-size: 0.7em; color: #888; font-weight: normal;">
+                    [{post.kind === 30023 ? 'Longform' : post.kind === 30818 ? 'Wiki' : post.kind}]
+                  </span>
                 </h4>
                 <div style="font-size: 0.8em; color: #aaa; margin-top: 4px;">
                   by @anon#{post.pubkey.slice(-4)} • {new Date(post.published_at * 1000).toLocaleDateString()}

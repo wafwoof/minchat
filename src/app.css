@@ -28,6 +28,9 @@ a {
   color: #888;
 }
 button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   /* height: 32px; */
   background-color: #6c6c6c;
   color: white;
@@ -110,7 +113,7 @@ input:focus, select:focus {
   flex-direction: row;
   justify-content: space-between;
   gap: 4px;
-  margin-bottom: 4px;
+  /* margin-bottom: 4px; */
   font-size: 0.9em;
   color: #aaa;
 }
@@ -125,6 +128,7 @@ input:focus, select:focus {
 }
 .messagesContainer .message .messageContent {
   font-size: 1em;
+  line-height: 1;
   word-wrap: break-word;
 }
 
