@@ -397,9 +397,7 @@ export default function App() {
             class="left"
             onClick={() => {
               const newHandle = prompt('Enter your handle (without @):', handle);
-              if (newHandle) {
-                setHandle(newHandle.replace(/@/g, '').slice(0, 20));
-              }
+              if (newHandle) setHandle(newHandle.replace(/@/g, '').slice(0, 20));
             }}
           >
             <span>
@@ -410,7 +408,7 @@ export default function App() {
         <div class="right">
           <div>
             <span
-              style="margin-right: 8px; cursor: pointer;"
+              style="margin-right: 4px; cursor: pointer;"
               onClick={() => {
                 const newChannel = prompt('Enter channel name (without #):', channel);
                 if (newChannel) {
@@ -420,11 +418,11 @@ export default function App() {
             >
               #{channel}
             </span>
-            {connected ? (
+            {/* {connected ? (
               <Signal size={14} style="color: white;" title="Connected" />
             ) : (
               <SignalZero size={14} style="color: red;" title="Disconnected" />
-            )}
+            )} */}
           </div>
           <div>
             <span>e2ee </span>

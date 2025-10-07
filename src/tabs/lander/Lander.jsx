@@ -15,12 +15,16 @@ export default function SettingsTab({ generateKeys }) {
         <div style="height: 20px;" />
         <h3>Info</h3>
         <p>
-          This is a minimal nostr client (kind 1). It is also compatible with bitchat (kind 20000/23333) and supports end-to-end encryption (E2EE) using AES-GCM.
+          This is a simple hybrid nostr client. 4 event kinds are supported: Notes (1), Bitchat (20000/23333), and longform posts (30023).
         </p>
-        {/* <br />
+        <br />
         <p>
-          Note: You can enter a channel name by clicking on the channel name in the top-right. 
-        </p> */}
+          MinChat supports proof-of-work and simple (but pretty solid) end-to-end encryption (E2EE) for channels and direct messages using AES-GCM.
+        </p>
+        <br />
+        <p>
+          Note: tags are clickable in the longform explorer tab.
+        </p>
         <br />
         <p>
           Contact me if you have any questions or suggestions. Thanks.

@@ -96,7 +96,7 @@ export default function ExploreTab({
 
         <div style="max-height: 80vh; overflow-y: auto;">
           {longformPosts.length === 0 && !loadingLongform && (
-            <p style="color: #aaa;">No posts loaded. Click "Fetch Latest Posts" to load recent #{longformTag} longform content.</p>
+            <p style="color: #aaa;">No posts loaded.</p>
           )}
           
           {longformPosts.map(post => (
