@@ -612,13 +612,13 @@ export default function App() {
             <ShoppingCart size={16} />
           </button>
         </div>
-        <div>
+        {/* <div>
             <button
               onClick={() => setChannel('minchat')}
             >
               <House size={16} />
             </button>
-        </div>
+        </div> */}
         <div>
             <button
               onClick={() => setChannel('9q')}
@@ -626,13 +626,6 @@ export default function App() {
               #9q
             </button>
         </div>
-        {/* <div>
-            <button
-              onClick={() => setChannel('6g')}
-            >
-              #6g
-            </button>
-        </div> */}
         <div>
             <button
               onClick={() => setChannel('nostr')}
