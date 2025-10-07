@@ -2,23 +2,33 @@ import './app.css';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { render } from 'preact';
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
-import { Lock, Settings, SendHorizontal, Earth, Map, Pickaxe, ArrowBigLeft, House, Key, User, Link } from 'lucide-preact';
+import { 
+  Lock, Settings, SendHorizontal, Earth, Map, 
+  Pickaxe, ArrowBigLeft, House, Key, User, 
+  Link, Signal, SignalZero, Image, Telescope
+} from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
-import geohash from 'ngeohash';
+// import geohash from 'ngeohash';
+import LanderTab from './tabs/lander/Lander.jsx';
+import ExploreTab from './tabs/explore/Explore.jsx';
+import SettingsTab from './tabs/settings/Settings.jsx';
 
 const config = {
+  version: '0.0.2',
   relays: [
     'wss://tr7b9d5l-8080.usw2.devtunnels.ms', 
     'wss://relay.damus.io', 
     'wss://relay.nostr.band', 
     'wss://nostr-relay.zimage.com', 
-    'wss://offchain.pub'
+    'wss://offchain.pub',
+    'wss://relay-testnet.k8s.layer3.news'
   ],
   kind1Channels: ['nostr', 'grownostr', 'bitcoin','general', 'random'],
   kind20000Channels: ['minchat', 'crypto', '9q', 'c2', 'dr', 'test', 'tech'],
   favoriteChannels: ['minchat', '9q', 'c2', 'dr'],
   powDifficulty: 8,
   encryptionKey: 'minchat-demo-key-0001',
+  imagesEnabled: true
 };
 
 export default function App() {
@@ -72,6 +82,14 @@ export default function App() {
     const saved = localStorage.getItem('minchat-geolocation');
     return saved ? JSON.parse(saved) : null;
   });
+  const [imagesEnabled, setImagesEnabled] = useState(() => {
+    const saved = localStorage.getItem('minchat-images-enabled');
+    return saved ? JSON.parse(saved) : config.imagesEnabled;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('minchat-images-enabled', JSON.stringify(imagesEnabled));
+  }, [imagesEnabled]);
 
   useEffect(() => {
     localStorage.setItem('minchat-e2e-enabled', JSON.stringify(e2eEnabled));
@@ -147,7 +165,7 @@ export default function App() {
     };
   }, [pk]);
 
-  const connect = () => {
+  function connect() {
     if (!pk) {
       alert('Generate keys first');
       return;
@@ -186,25 +204,24 @@ export default function App() {
             time: d.toLocaleTimeString(),
             created_at: e.created_at
           };
-          
           // check if message already exists to avoid duplicates
           if (prev.some(msg => msg.id === newMessage.id)) {
             return prev;
           }
-          
           // add new message and sort by created_at (newest first)
           return [...prev, newMessage].sort((a, b) => b.created_at - a.created_at);
         });
       }
     });
+
   };
 
-  const disconnect = () => {
+  function disconnect() {
     if (subRef.current) subRef.current.close();
     setConnected(false);
   };
 
-  const changeChannel = () => {
+  function changeChannel() {
     if (poolRef.current && subRef.current) {
       subRef.current.close();
       connect();
@@ -284,226 +301,94 @@ export default function App() {
     setMessage('');
   };
 
-  // if no keys, prompt to generate
+
+  // LANDING PAGE
   if (!pk) {
-    // generateKeys();
     return (
-      <section class="appContainer">
-        <div
-          style="padding: 8px; max-width: 400px;"
-        >
-          <div class="logo">
-            <img src="/favicon/favicon-96x96.png" alt="MinChat Logo" width="40" height="40" />
-            <span>
-              MinChat Demo
-            </span>
-          </div>
-          <div style="height: 20px;" />
-          <h3>Info</h3>
-          <p>
-            This is a minimal nostr client. It is also compatible with bitchat (20000/23333) and supports end-to-end encryption (E2EE) using AES-GCM.
-          </p>
-          <br />
-          <p>
-            You can change your handle by clicking on it (top-left). You can also change channels by clicking on the channel name (top-right). 
-            I have included some saved channels for easy access.
-          </p>
-          <br />
-          <p>
-            Contact me if you have any questions or suggestions. Thanks.
-          </p>
-          <div 
-            style="margin-top: 20px;"
-          />
-          <div class="keyContainer">
-            <button 
-              onClick={generateKeys}
-              class=""
-            >
-              Generate Random Keypair
-            </button>
-          </div>
-        </div>
-      </section>
+      <LanderTab 
+        generateKeys={generateKeys} 
+      />
     );
   }
 
-  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // EXPLORE TAB
+  const [exploreTabOpen, setexploreTabOpen] = useState(() => {
+    const saved = localStorage.getItem('minchat-explore-tab-open');
+    return saved ? JSON.parse(saved) : false;
+  });
+  useEffect(() => { localStorage.setItem('minchat-explore-tab-open', JSON.stringify(exploreTabOpen)); }, [exploreTabOpen]);
+  // const [longformPosts, setLongformPosts] = useState([]);
+  const [longformPosts, setLongformPosts] = useState(() => {
+    const saved = localStorage.getItem('minchat-longform-posts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => { localStorage.setItem('minchat-longform-posts', JSON.stringify(longformPosts)); }, [longformPosts]);
+  const [lastFetchedDatestamp, setLastFetchedDatestamp] = useState(() => {
+    const saved = localStorage.getItem('minchat-longform-last-fetched-datestamp');
+    return saved ? JSON.parse(saved) : null;
+  });
+  useEffect(() => { localStorage.setItem('minchat-longform-last-fetched-datestamp', JSON.stringify(lastFetchedDatestamp)); }, [lastFetchedDatestamp]);
+  const [loadingLongform, setLoadingLongform] = useState(false);
+  const [longformTag, setLongformTag] = useState(() => {
+    const saved = localStorage.getItem('minchat-longform-tag');
+    return saved ? JSON.parse(saved) : 'nostr';
+  });
+  useEffect(() => { localStorage.setItem('minchat-longform-tag', JSON.stringify(longformTag)); }, [longformTag]);
+  if (exploreTabOpen) {
+    return (
+      <ExploreTab
+        config={config}
+        poolRef={poolRef}
+        exploreTabOpen={exploreTabOpen}
+        setexploreTabOpen={setexploreTabOpen}
+        longformPosts={longformPosts}
+        setLongformPosts={setLongformPosts}
+        loadingLongform={loadingLongform}
+        setLoadingLongform={setLoadingLongform}
+        lastFetchedDatestamp={lastFetchedDatestamp}
+        setLastFetchedDatestamp={setLastFetchedDatestamp}
+        setLongformTag={setLongformTag}
+        longformTag={longformTag}
+      />
+    );
+  }
+
+
+  // SETTINGS TAB
+  const [settingsOpen, setSettingsOpen] = useState(() => {
+    const saved = localStorage.getItem('minchat-settings-open');
+    return saved ? JSON.parse(saved) : false;
+  });
+  useEffect(() => { localStorage.setItem('minchat-settings-open', JSON.stringify(settingsOpen)); }, [settingsOpen]);
   if (settingsOpen) {
     return (
-      <section class="appContainer" style="overflow-y: auto;">
-        <div style="width: 100%; padding: 4px 16px;">
-          <div style="display: flex; justify-content: flex-end;">
-            <button
-              onClick={() => setSettingsOpen(false)}
-            >
-              <ArrowBigLeft size={16} />
-            </button>
-          </div>
-          <div style="height: 20px;" />
-          <div>
-            <h3>Settings</h3>
-          </div>
-        </div>
-        <div class="channelContainer" style="padding: 4px 16px;">
-          <p>
-            Change Channel:
-          </p>
-          <form onSubmit={(e) => { e.preventDefault(); changeChannel(); }}>
-            <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-              {![...config.favoriteChannels, ...config.kind1Channels, ...config.kind20000Channels].includes(channel) && (
-                <option value={channel}>#{channel}</option>
-              )}
-              {![...config.favoriteChannels, ...config.kind1Channels, ...config.kind20000Channels].includes(channel) && (
-                <option disabled>──────────</option>
-              )}
-              {config.favoriteChannels.map(ch => (
-                <option value={ch}>#{ch}</option>
-              ))}
-              <option disabled>──────────</option>
-              {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
-                <option value={ch}>#{ch}</option>
-              ))}
-              <option disabled>──────────</option>
-              {config.kind20000Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
-                <option value={ch}>#{ch}</option>
-              ))}
-            </select>
-          </form>
-          <p>
-            Current Channel: #{channel}
-          </p>
-        </div>
-        <div style="padding: 4px 16px;">
-          <User size={28} />
-          <p>
-            Your Handle:
-          </p>
-          <input
-            type="text"
-            value={handle === 'anon' || !handle ? '' : handle}
-            onInput={(e) => setHandle(e.target.value.replace(/@/g, '').slice(0, 20) || 'anon')}
-            placeholder="Handle (without @)"
-            class=""
-            style="border: 1px solid #444; padding: 4px; width: 200px; background-color: #222; color: white;"
-          />
-          <div style="height: 12px;" />
-          <Pickaxe size={28} />
-          <p>
-            PoW Difficulty: {config.powDifficulty}
-          </p>
-          <div style="height: 12px;" />
-                    <Key size={28} />
-          <p>
-            End-to-End Encryption (E2EE): {e2eEnabled ? 'Enabled' : 'Disabled'}
-          </p>
-          <div style="height: 12px;" />
-
-          <p>
-            Encryption Key:
-          </p>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <input
-              type="text"
-              value={encryptionKey}
-              onInput={(e) => setEncryptionKey(e.target.value)}
-              placeholder="Encryption key"
-              class=""
-              style="border: 1px solid #444; padding: 4px; width: 250px; background-color: #222; color: white;"
-            />
-            <button
-              onClick={() => setEncryptionKey(config.encryptionKey)}
-            >
-              Reset
-            </button>
-          </div>
-          <p style="font-size: 0.9em; color: #aaa; margin-top: 8px;">
-            (this key is only used for kind 20000/23333 channels/events, not kind 1)
-          </p>
-          <div style="height: 12px;" />
-          <Key size={28} />
-          <p>
-            Public Key:
-          </p>
-          <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {pk}
-          </p>
-          <br />
-          <p>
-            Secret Key:
-          </p>
-          <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {sk.toString()}
-          </p>
-          <p style="font-size: 0.9em; color: #aaa; margin-top: 8px;">
-            (do not reveal this to anyone ever)
-          </p>
-        </div>
-        <div
-          style="padding: 4px 16px;"
-        >
-          <button
-          onClick={() => {
-            if (confirm('Are you sure you want to reset your keys? This will generate a new random identity.')) {
-            clearKeys();
-            window.location.reload();
-            }
-          }}
-          >
-          Reset Keys
-          </button>
-          <p style="font-size: 0.9em; color: #aaa; margin-top: 8px;">
-            (your keypair, you will lose access to your profile)
-          </p>
-        </div>
-        <div
-          style="padding: 4px 16px;"
-        >
-          <button
-          onClick={() => {
-            alert('Relays:\n' + Array.from(poolRef.current.relays.keys()).join('\n'));
-          }}
-          >
-          List Relays
-          </button>
-          <p style="font-size: 0.9em; color: #aaa; margin-top: 8px;">
-            (all connected relays)
-          </p>
-          <div style="height: 12px;" />
-          <Earth 
-            size={28}
-          />
-          <p>
-            Your Geohash: {geolocation ? geohash.encode(geolocation.coords.latitude, geolocation.coords.longitude) : 'Unset'}
-          </p>
-          <p>
-            (note: your location is only stored in your browser and is never sent anywhere)
-          </p>
-        </div>
-        <div style="padding: 4px 16px; font-size: 0.9em;">
-          <div style="height: 12px;" />
-          <Link size={28} />
-          <br /><br />
-          <a href="https://nostrdata.github.io/kinds/">
-            https://nostrdata.github.io/kinds/
-          </a>
-          <br /><br />
-          <a href="https://github.com/nostr-protocol/nips">
-            https://github.com/nostr-protocol/nips
-          </a>
-          <br /><br />
-          <a href="https://nietzschelabs.com">
-            https://nietzschelabs.com
-          </a>
-          <br /><br />
-          <p>
-            v0.0.1
-          </p>
-        </div>
-      </section>
+      <SettingsTab 
+        config={config}
+        sk={sk}
+        pk={pk}
+        setSk={setSk}
+        setSettingsOpen={setSettingsOpen}
+        channel={channel}
+        setChannel={setChannel}
+        changeChannel={changeChannel}
+        handle={handle}
+        setHandle={setHandle}
+        e2eEnabled={e2eEnabled}
+        encryptionKey={encryptionKey}
+        setEncryptionKey={setEncryptionKey}
+        clearKeys={clearKeys}
+        imagesEnabled={imagesEnabled}
+        setImagesEnabled={setImagesEnabled}
+        poolRef={poolRef}
+        geolocation={geolocation}
+        setGeolocation={setGeolocation}
+      />
     );
   }
 
+
+  // MAIN CHAT UI
   return (
     <section class="appContainer">
       <div class="keyContainer">
@@ -517,12 +402,15 @@ export default function App() {
               }
             }}
           >
-            @{handle}#{pk.slice(-4)}
+            <span>
+              @{handle}#{pk.slice(-4)}
+            </span>
           </div>
         )}
         <div class="right">
           <div>
             <span
+              style="margin-right: 8px; cursor: pointer;"
               onClick={() => {
                 const newChannel = prompt('Enter channel name (without #):', channel);
                 if (newChannel) {
@@ -532,6 +420,11 @@ export default function App() {
             >
               #{channel}
             </span>
+            {connected ? (
+              <Signal size={14} style="color: white;" title="Connected" />
+            ) : (
+              <SignalZero size={14} style="color: red;" title="Disconnected" />
+            )}
           </div>
           <div>
             <span>e2ee </span>
@@ -559,11 +452,26 @@ export default function App() {
             }, [msg.content]);
             
             displayContent = decryptedContent;
+
+            // check for markdown style image ![alt](url)
+            const mdImageRegex = /!\[.*?\]\((.*?)\)/;
+            const mdImageMatch = displayContent.match(mdImageRegex);
+            const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|svg))/i;
+            const urlMatch = displayContent.match(urlRegex);
+            //const allowedDomains = ['i.imgur.com', 'imgur.com', 'i.redd.it', 'media.tenor.com', 'media.giphy.com', 'pbs.twimg.com', 'cdn.discordapp.com'];
+            if (mdImageMatch && mdImageMatch[1] && (mdImageMatch[1].startsWith('http://') || mdImageMatch[1].startsWith('https://'))) {
+              const imageUrl = mdImageMatch[1];
+              displayContent = (
+                <div>
+                  <img src={imageUrl} alt="Image" style="max-width: 200px; max-height: 200px;" />
+                  <div>{displayContent.replace(mdImageRegex, '')}</div>
+                </div>
+              );
+            }
           } 
           // else if (isEncrypted && !e2eEnabled) {
           //   displayContent = '[Encrypted message - enable e2e to decrypt]';
           // }
-          console.log(msg)
           return (
             <div key={msg.id} class="message">
               <div class="messageHeader">
@@ -588,44 +496,25 @@ export default function App() {
             <Settings size={16} />
           </button>
         </div>
-        <div>
+        <div style="margin-right: 8px;">
           <button
             onClick={() => {
-              navigator.geolocation.getCurrentPosition((position) => {
-                setGeolocation(position);
-                const geohashCode = geohash.encode(position.coords.latitude, position.coords.longitude).slice(0, 2);
-                // check if user wants to go to this geohash channel
-                if (confirm(`This geohash is a ~300k² mile area (with you inside).\nWould you like to go to this channel?\n\n#${geohashCode}`)) {
-                  setChannel(geohashCode);
-                }
-                setChannel(geohashCode);
-              }, (error) => {
-                console.error('Error getting location:', error);
-                alert('Error getting location: ' + error.message);
-              });
+              const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
+              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) 
+                // && /\.(png|jpg|jpeg|gif|svg)$/i.test(imageUrl)
+              ) {
+                setMessage(message + ` ![Image](${imageUrl})`);
+              }
             }}
           >
-            <Earth size={16} />
+            <Image size={16} />
           </button>
         </div>
-        <div>
+        <div style="margin-right: 8px;">
           <button
-            onClick={() => {
-              navigator.geolocation.getCurrentPosition((position) => {
-                setGeolocation(position);
-                const geohashCode = geohash.encode(position.coords.latitude, position.coords.longitude).slice(0, 5);
-                // check if user wants to go to this geohash channel
-                if (confirm(`This geohash is a ~3² mile area (with you inside).\nWould you like to go to this channel?\n\n#${geohashCode}`)) {
-                  setChannel(geohashCode);
-                }
-                setChannel(geohashCode);
-              }, (error) => {
-                console.error('Error getting location:', error);
-                alert('Error getting location: ' + error.message);
-              });
-            }}
+            onClick={() => setexploreTabOpen(true)}
           >
-            <Map size={16} />
+            <Telescope size={16} />
           </button>
         </div>
         <div>
