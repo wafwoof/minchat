@@ -133,12 +133,12 @@ export default function MarketTab({
               </div>
               
               {post.summary && (
-                <div style="margin: 8px 0; color: #ccc; font-style: italic;">
+                <div style="margin: 8px 0; color: #ccc; font-style: italic; overflow-wrap: break-word;">
                   {post.summary}
                 </div>
               )}
               
-              <div style="margin: 8px 0; font-size: 0.9em; line-height: 1.4; word-wrap: break-word;">
+              <div style="margin: 8px 0; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">
                 {post.content}
               </div>
 

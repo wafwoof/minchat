@@ -158,11 +158,6 @@ export default function ExploreTab({
                 </h4>
                 <div style="font-size: 0.8em; color: #aaa; margin-top: 4px;">
                   by @anon#{post.pubkey.slice(-4)} • {new Date(post.published_at * 1000).toLocaleDateString()}
-                  {/* {post.wikiId && (
-                    <span style="margin-left: 8px;">
-                      • ID: {post.wikiId}
-                    </span>
-                  )} */}
                 </div>
               </div>
               
@@ -177,7 +172,7 @@ export default function ExploreTab({
               </div>
 
               {post.altText && (
-                <div style="margin: 8px 0; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; color: #888; font-style: italic;">
+                <div style="margin: 8px 0; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; color: #888; font-style: italic; overflow-wrap: break-word;">
                   {post.altText}
                 </div>
               )}
