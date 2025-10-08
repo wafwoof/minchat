@@ -16,7 +16,7 @@ import MarketTab from './tabs/market/Market.jsx';
 import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
-  version: '0.0.4',
+  version: '0.0.5',
   relays: {
     main: [
       'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
@@ -48,7 +48,7 @@ const config = {
       'wss://nos.lol',
     ]
   },
-  kind1Channels: ['nostr', 'random', 'tech', 'news', 'art', 'politics'],
+  kind1Channels: ['netsequé', 'nostr', 'tech', 'news', 'politics'],
   kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
   favoriteChannels: [],
   defaultChannel: 'minchat',
