@@ -178,20 +178,19 @@ export default function SettingsTab({
         <p>
           Secret Key:
         </p>
-        {/* <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {sk.toString()}
-        </p> */}
-        <p
-          style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-            filter: showSecretKey ? 'none' : 'blur(2px)',
-            userSelect: showSecretKey ? 'auto' : 'none'
-          }}
-        >
-          {/* [{sk.toString()}] */}
-          {showSecretKey ? `[${sk.toString()}]` : '•'.repeat(120)}
-        </p>
+        <div style="max-width: 250px; overflow: scroll; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <p
+            style={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              overflowWrap: 'break-word',
+              filter: showSecretKey ? 'none' : 'blur(2px)',
+              userSelect: showSecretKey ? 'auto' : 'none'
+            }}
+          >
+            {showSecretKey ? `[${sk.toString()}]` : '•'.repeat(120)}
+          </p>
+        </div>
         <br />
         <button
           onClick={() => setShowSecretKey(!showSecretKey)}
