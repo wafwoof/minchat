@@ -66,7 +66,7 @@ export default function SettingsTab({
             onClick={() => setSettingsOpen(false)}
             style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
       </div>

@@ -88,7 +88,7 @@ export default function ExploreTab({
             onClick={() => setexploreTabOpen(false)}
             style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
         
