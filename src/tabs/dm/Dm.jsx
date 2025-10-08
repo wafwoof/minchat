@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { X, SendHorizontal, User, MessageCircle, ArrowLeft, UserPlus } from 'lucide-preact';
+import { X, SendHorizontal, User, MessageCircle, ArrowLeft, UserPlus, Check } from 'lucide-preact';
 import { nip17, nip19 } from 'nostr-tools';
 
 export default function DmTab({
@@ -20,7 +20,7 @@ export default function DmTab({
       return [{
         pubkey: defaultPubkey,
         name: `Minchat#${defaultPubkey.slice(-4)}`,
-        lastMessage: "Official Minchat support",
+        lastMessage: "Official Minchat Account.",
         timestamp: Date.now()
       }];
     } catch (error) {
@@ -398,6 +398,20 @@ export default function DmTab({
                 `}
                 autoFocus
               />
+              <button
+                onClick={updateConversationHandle}
+                style="margin-left: 4px; padding: 4px 8px; cursor: pointer;"
+                title="Save"
+              >
+                <Check size={14} />
+              </button>
+              <button
+                onClick={() => { setIsEditingHandle(false); setEditHandleValue(''); }}
+                style="margin-left: 4px; padding: 4px 8px; cursor: pointer;"
+                title="Cancel"
+              >
+                <X size={14} />
+              </button>
             </div>
           ) : (
             <span 
@@ -405,7 +419,8 @@ export default function DmTab({
               onClick={startEditingHandle}
               title="Click to edit handle"
             >
-              {selectedConversation && !showConversationsList 
+              {selectedConversation 
+                // && !showConversationsList 
                 ? `@${handle}#${pk?.slice(-4)} → @${selectedConversation.name}`
                 : `@${handle}#${pk?.slice(-4)}`
               }
@@ -469,7 +484,10 @@ export default function DmTab({
             </button>
           </div>
           
-          {conversations.map(conv => (
+          {/* {conversations.map(conv => ( */}
+          {conversations
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .map(conv => (
             <div
               key={conv.pubkey}
               onClick={() => setSelectedConversation(conv)}
@@ -519,6 +537,7 @@ export default function DmTab({
                   max-height: calc(100dvh - 73px);
                   flex: 1; 
                   flex-direction: column;
+                  justify-content: flex-end;
                   overflow-y: auto; 
                   padding: 8px;
                   border-top: none;

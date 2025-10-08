@@ -6,7 +6,7 @@ import {
   Lock, Settings, SendHorizontal, Earth, Map, 
   Pickaxe, X, House, Key, User, 
   Link, Signal, SignalZero, Image, Telescope,
-  ShoppingCart, Inbox
+  ShoppingCart, Inbox, Copy
 } from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
 import LanderTab from './tabs/lander/Lander.jsx';
@@ -599,6 +599,15 @@ export default function App() {
                 <span>{msg.time}</span>
                 {msg.tags.some(t => t[0] === 'nonce') && (<div style="display: flex;"><Pickaxe size={14} style="margin-left: 0;" /></div>)}
                 {isEncrypted && (<div style="display: flex;"><Lock size={14} style="margin-left: 0;" /></div>)}
+                <Copy 
+                  size={14} 
+                  style="margin-left: 8px; cursor: pointer;"
+                  onClick={() => {
+                    navigator.clipboard.writeText(msg.pubkey).then(() => {
+                      alert('Public key copied to clipboard');
+                    })
+                  }}
+                />
               </div>
               <div class="messageContent">
                 {displayContent}
@@ -660,7 +669,7 @@ export default function App() {
               <House size={16} />
             </button>
         </div> */}
-        <div>
+        <div style="margin-right: 8px;">
             <button
               onClick={() => setChannel('9q')}
             >

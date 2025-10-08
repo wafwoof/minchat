@@ -1,5 +1,7 @@
 import { 
-  X, Earth, Map, User, Pickaxe, Key, Image, Link, Satellite, Hash, Copy
+  X, Earth, Map, User, Pickaxe, 
+  Key, Image, Link, Satellite, Hash, 
+  Copy, Info,
 } from 'lucide-preact';
 import geohash from 'ngeohash';
 import { useRef, useState } from 'preact/hooks';
@@ -188,7 +190,7 @@ export default function SettingsTab({
               userSelect: showSecretKey ? 'auto' : 'none'
             }}
           >
-            {showSecretKey ? `[${sk.toString()}]` : '•'.repeat(120)}
+            {showSecretKey ? `[${sk.toString()}]` : '[234,329,34,313,434,554,54,153,334,245,89,97,234,243,34,234,123,43,341,178,20,34,234]'}
           </p>
         </div>
         <br />
@@ -366,7 +368,7 @@ export default function SettingsTab({
           ))}
         </ul>
       </div>
-      <div style="padding: 4px 16px;">
+      <div style="padding: 4px 16px; margin-bottom: 16px;">
         <Pickaxe size={20} />
         <p>
           PoW Difficulty: {config.powDifficulty}
@@ -384,20 +386,51 @@ export default function SettingsTab({
           (only images from markdown syntax will be displayed, e.g. ![alt](url) and only if e2ee is enabled)
         </p>
       </div>
+      <div style="padding: 4px 16px;">
+        <Info size={20} />
+        <p>
+          Nostr Event Kinds:
+        </p>
+        <img 
+          src="/images/example1.jpg" 
+          alt="Example 1" 
+          style="max-width: 250px; margin-top: 16px;" 
+        />
+        <ul style="margin: 4px 0; list-style-type: none;">
+          <li>
+            1059: Gift-Wrapped DMs
+          </li>
+          <li>
+            30023: Longform Posts
+          </li>
+          <li>
+            30818: Wiki Posts & Edits
+          </li>
+          <li>
+            30402: Classified Listings
+          </li>
+          <li>
+            20000/23333: Bitchat
+          </li>
+          <li>
+            1: Nostr Notes
+          </li>
+        </ul>
+      </div>
       <div style="padding: 4px 16px; font-size: 0.9em;">
         <div style="height: 24px;" />
         <Link size={20} />
         <br /><br />
         <a href="https://nostrdata.github.io/kinds/">
-          https://nostrdata.github.io/kinds/
+          1: https://nostrdata.github.io/kinds/
         </a>
         <br /><br />
         <a href="https://github.com/nostr-protocol/nips">
-          https://github.com/nostr-protocol/nips
+          2: https://github.com/nostr-protocol/nips
         </a>
         <br /><br />
         <a href="https://nietzschelabs.com">
-          https://nietzschelabs.com
+          3: https://nietzschelabs.com
         </a>
         <br /><br />
         <p>
