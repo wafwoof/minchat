@@ -3,10 +3,10 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { render } from 'preact';
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
 import { 
-  Lock, Settings, SendHorizontal, Earth, Map, 
-  Pickaxe, X, House, Key, User, 
-  Link, Signal, SignalZero, Image, Telescope,
-  ShoppingCart, Inbox, Copy
+  Lock, Settings, SendHorizontal,
+  Pickaxe, Image, Telescope,
+  ShoppingCart, Inbox, Copy,
+  Trash2
 } from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
 import LanderTab from './tabs/lander/Lander.jsx';
@@ -16,7 +16,7 @@ import MarketTab from './tabs/market/Market.jsx';
 import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
-  version: '0.0.5',
+  version: '0.0.6',
   relays: {
     main: [
       'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
@@ -48,7 +48,7 @@ const config = {
       'wss://nos.lol',
     ]
   },
-  kind1Channels: ['netsequé', 'nostr', 'tech', 'news', 'politics'],
+  kind1Channels: ['nostr', 'tech', 'news', 'politics', 'netsequé', 'penpalclub'],
   kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
   favoriteChannels: [],
   defaultChannel: 'minchat',
@@ -161,12 +161,37 @@ export default function App() {
     localStorage.setItem('minchat-channel', JSON.stringify(channel));
   }, [channel]);
 
+  // when the channel changes, auto-switch protocol to the correct one
   useEffect(() => {
     console.log(`channel changed to: #${channel}`);
+    if (config.kind1Channels.includes(channel)) {
+      setChatProtocol('nostr');
+    } else {
+      setChatProtocol('bitchat');
+    }
     if (connected) {
       changeChannel();
     }
   }, [channel]);
+
+  const [chatProtocol, setChatProtocol] = useState(() => {
+    const saved = localStorage.getItem('minchat-chat-protocol');
+    return saved ? JSON.parse(saved) : 'bitchat';
+  });
+  useEffect(() => {
+    localStorage.setItem('minchat-chat-protocol', JSON.stringify(chatProtocol));
+  }, [chatProtocol]);
+  const [initialChangeChannelDone, setInitialChangeChannelDone] = useState(false);
+
+  // auto-change channel when protocol changes (but not on initial load)
+  // this reloads the messages for the new protocol
+  useEffect(() => {
+    if (!initialChangeChannelDone) {
+      setInitialChangeChannelDone(true);
+      return;
+    }
+    changeChannel();
+  }, [chatProtocol]);
 
   const generateKeys = () => {
     const secretKey = generateSecretKey();
@@ -213,7 +238,9 @@ export default function App() {
     setConnected(true);
 
     const now = Math.floor(Date.now() / 1000);
-    const filter = config.kind1Channels.includes(channel)
+    // const filter = config.kind1Channels.includes(channel)
+    // const filter = (chatProtocol === 'nostr' || config.kind1Channels.includes(channel))
+    const filter = chatProtocol === 'nostr'
       ? {
         kinds: [1],
         '#t': [channel],
@@ -282,28 +309,27 @@ export default function App() {
       }
     }
 
-    let tags = config.kind1Channels.includes(channel)
+    // Determine kind based on protocol
+    // const isNostrProtocol = chatProtocol === 'nostr' || config.kind1Channels.includes(channel);
+    const isNostrProtocol = chatProtocol === 'nostr';
+    const eventKind = isNostrProtocol ? 1 : 20000;
+
+    let tags = isNostrProtocol
       ? [['t', channel]]
       : [['g', channel]];
 
     // add 'n' tag if handle is set and not 'anon'
-    if (handle && handle !== 'anon' && !config.kind1Channels.includes(channel)) {
+    if (handle && handle !== 'anon' && !isNostrProtocol) {
       tags.push(['n', handle]);
     }
 
     // add 'e' tag for e2e if enabled
-    if (e2eEnabled && !config.kind1Channels.includes(channel)) {
+    if (e2eEnabled && !isNostrProtocol) {
       tags.push(['encrypted', 'aes-gcm']);
     }
 
-    let event = config.kind1Channels.includes(channel) ? {
-      kind: 1,
-      created_at: Math.floor(Date.now() / 1000),
-      tags,
-      content: messageContent,
-      pubkey: pk
-    } : {
-      kind: 20000,
+    let event = {
+      kind: eventKind,
       created_at: Math.floor(Date.now() / 1000),
       tags,
       content: messageContent,
@@ -472,6 +498,7 @@ export default function App() {
         poolRef={poolRef}
         geolocation={geolocation}
         setGeolocation={setGeolocation}
+        chatProtocol={chatProtocol}
       />
     );
   }
@@ -500,6 +527,46 @@ export default function App() {
     );
   }
 
+  async function deletePost(eventId) {
+    if (!sk) {
+      alert('Cannot delete: No secret key');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    // create a kind 5 deletion event (NIP-09)
+    let event = {
+      kind: 5,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [['e', eventId]],
+      content: 'deleted',
+      pubkey: pk
+    };
+
+    setMining(true);
+    await new Promise(r => setTimeout(r, 100));
+    try {
+      event = nip13.minePow(event, config.powDifficulty);
+    } catch (e) {
+      console.log('PoW mining failed:', e);
+    }
+    setMining(false);
+
+    const signed = finalizeEvent(event, sk);
+
+    if (!poolRef.current) {
+      poolRef.current = new SimplePool();
+    }
+
+    await poolRef.current.publish(relays.main, signed);
+    
+    // remove the message from local state
+    setMessages(prev => prev.filter(msg => msg.id !== eventId));
+  }
+
 
   // MAIN CHAT UI
   return (
@@ -509,10 +576,18 @@ export default function App() {
           <div 
             class="left"
             onClick={() => {
-              const newHandle = prompt('Enter your handle (without @):', handle);
-              if (newHandle) setHandle(newHandle.replace(/@/g, '').slice(0, 20));
+              // const newHandle = prompt('Enter your handle (without @):', handle);
+              // if (newHandle) setHandle(newHandle.replace(/@/g, '').slice(0, 20));
+              if (chatProtocol === 'nostr') {
+                setChatProtocol('bitchat');
+              } else {
+                setChatProtocol('nostr');
+              }
             }}
           >
+            <span>
+              {chatProtocol}/
+            </span>
             <span>
               @{handle}#{pk.slice(-4)}
             </span>
@@ -569,8 +644,8 @@ export default function App() {
             // check for markdown style image ![alt](url)
             const mdImageRegex = /!\[.*?\]\((.*?)\)/;
             const mdImageMatch = displayContent.match(mdImageRegex);
-            const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|svg))/i;
-            const urlMatch = displayContent.match(urlRegex);
+            // const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|svg))/i;
+            // const urlMatch = displayContent.match(urlRegex);
             //const allowedDomains = ['i.imgur.com', 'imgur.com', 'i.redd.it', 'media.tenor.com', 'media.giphy.com', 'pbs.twimg.com', 'cdn.discordapp.com'];
             if (mdImageMatch && mdImageMatch[1] && (mdImageMatch[1].startsWith('http://') || mdImageMatch[1].startsWith('https://'))) {
               const imageUrl = mdImageMatch[1];
@@ -599,15 +674,24 @@ export default function App() {
                 <span>{msg.time}</span>
                 {msg.tags.some(t => t[0] === 'nonce') && (<div style="display: flex;"><Pickaxe size={14} style="margin-left: 0;" /></div>)}
                 {isEncrypted && (<div style="display: flex;"><Lock size={14} style="margin-left: 0;" /></div>)}
-                <Copy 
-                  size={14} 
-                  style="margin-left: 8px; cursor: pointer;"
-                  onClick={() => {
-                    navigator.clipboard.writeText(msg.pubkey).then(() => {
-                      alert('Public key copied to clipboard');
-                    })
-                  }}
-                />
+                {msg.pubkey !== pk && (
+                  <Copy 
+                    size={14} 
+                    style="margin-left: 8px; cursor: pointer;"
+                    onClick={() => {
+                      navigator.clipboard.writeText(msg.pubkey).then(() => {
+                        alert('Public key copied to clipboard');
+                      })
+                    }}
+                  />
+                )}
+                {msg.pubkey === pk && (
+                  <Trash2 
+                    size={14} 
+                    style="margin-left: 8px; cursor: pointer;"
+                    onClick={() => deletePost(msg.id)}
+                  />
+                )}
               </div>
               <div class="messageContent">
                 {displayContent}
@@ -669,7 +753,7 @@ export default function App() {
               <House size={16} />
             </button>
         </div> */}
-        <div style="margin-right: 8px;">
+        {/* <div style="margin-right: 8px;">
             <button
               onClick={() => setChannel('9q')}
             >
@@ -682,10 +766,45 @@ export default function App() {
             >
               #nostr
             </button>
+        </div> */}
+        <div>
+          <form onSubmit={(e) => { e.preventDefault(); changeChannel(); }} style="margin-bottom: 0px;">
+            <select 
+              value={channel} 
+              onChange={(e) => setChannel(e.target.value)}
+              style="max-width: 100px;"
+            >
+              <option disabled>Kind 1:</option>
+              {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
+                <option value={ch}>#{ch}</option>
+              ))}
+              <option disabled>Kind 20000/23333:</option>
+              {config.kind20000Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
+                <option value={ch}>#{ch}</option>
+              ))}
+            </select>
+          </form>
         </div>
+        {/* <div style="margin-right: 8px;">
+          <button
+            onClick={() => setChatProtocol('bitchat')}
+            style={chatProtocol === 'nostr' ? 'font-weight: bold;' : '' }
+          >
+            bitchat
+          </button>
+        </div>
+        <div>
+          <button
+            onClick={() => setChatProtocol('nostr')}
+            style={chatProtocol === 'bitchat' ? 'font-weight: bold;' : '' }
+          >
+            nostr
+          </button>
+        </div> */}
         {mining && (
           <div>
-            <span>Mining PoW...</span>
+            {/* <span>Mining PoW...</span> */}
+            <Pickaxe size={16} class="miningIcon" />
           </div>
         )}
       </div>

@@ -46,7 +46,19 @@ button {
   color: white;
   height: 32px;
 } */
-input:focus, select:focus {
+select {
+  height: 100%;
+  padding: 8px;
+  border: 1px solid #444;
+  border-radius: 0px;
+  background-color: #222;
+  color: white;
+  height: 32px;
+}
+select:focus {
+  outline: none;
+}
+input:focus {
   outline: none;
   border-color: #888;
 }

@@ -27,7 +27,7 @@ Nostr event kinds are similar to ports in TCP/IP. They allow clients/apps/relays
 - 1: Nostr Notes
   - sending & receiving
 
-![Image Example 1](/public/images/example1.jpg)
+![Image Example 1](/public/images/example3.jpg)
 
 Implementations of each even kind can be improved. I welcome suggestions and contributions.
 

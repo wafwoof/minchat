@@ -111,6 +111,9 @@ export default function SettingsTab({
           class=""
           style="border: 1px solid #444; padding: 4px; width: 200px; background-color: #222; color: white;"
         />
+        <p>
+          Current Chat Protocol: {config.kind1Channels.includes(channel) ? 'Nostr Notes (kind 1)' : 'Bitchat (kind 20000/23333)'}
+        </p>
       </div>
       <div style="padding: 4px 16px;">
         <User size={20} />
@@ -392,7 +395,7 @@ export default function SettingsTab({
           Nostr Event Kinds:
         </p>
         <img 
-          src="/images/example1.jpg" 
+          src="/images/example3.jpg" 
           alt="Example 1" 
           style="max-width: 250px; margin-top: 16px;" 
         />
@@ -422,19 +425,19 @@ export default function SettingsTab({
         <Link size={20} />
         <br /><br />
         <a href="https://nostrdata.github.io/kinds/">
-          1: https://nostrdata.github.io/kinds/
+          Kinds: https://nostrdata.github.io/kinds/
         </a>
         <br /><br />
         <a href="https://github.com/nostr-protocol/nips">
-          2: https://github.com/nostr-protocol/nips
+          Nips: https://github.com/nostr-protocol/nips
         </a>
         <br /><br />
         <a href="https://nietzschelabs.com">
-          3: https://nietzschelabs.com
+          NL: https://nietzschelabs.com
         </a>
         <br /><br />
         <p>
-          MinChat v{config.version} -  minimal nostr hybrid client thing by Nietzsche Labs
+          Minchat v{config.version} -  a minimal nostr hybrid client thing by Nietzsche Labs.
         </p>
       </div>
     </section>
