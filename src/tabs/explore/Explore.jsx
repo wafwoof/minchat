@@ -2,7 +2,7 @@ import { X, RotateCcw, Telescope, SlidersHorizontal } from 'lucide-preact';
 import { useState, useEffect } from 'preact/hooks';
 
 export default function ExploreTab({ 
-  config, poolRef, exploreTabOpen, setexploreTabOpen, longformPosts, 
+  config, relays, poolRef, exploreTabOpen, setexploreTabOpen, longformPosts, 
   setLongformPosts, loadingLongform, setLoadingLongform, lastFetchedDatestamp, setLastFetchedDatestamp,
   longformTag, setLongformTag
 }) {
@@ -36,17 +36,13 @@ export default function ExploreTab({
       filter['#t'] = [longformTag];
     }
 
-    const relays = selectedKind === '30818'
-      ? [
-          'wss://nos.lol',
-          'wss://relay.wikifreedia.xyz',
-          'wss://relay.nostr.band',
-        ]
-      : config.relays;
-    const sub = poolRef.current.subscribeMany(relays, filter, {
-    // const sub = poolRef.current.subscribeMany(config.relays, filter, {
+    // wiki uses its own set of relays because most don't carry wiki posts
+    // const relays = (selectedKind === '30818' ? relays.wiki : relays.main);
+    let exploreRelays = relays.main;
+    if (selectedKind === '30818') exploreRelays = relays.wiki;
+    const sub = poolRef.current.subscribeMany(exploreRelays, filter, {
       onevent(e) {
-        console.log('Explore event:', e);
+        // console.log('Explore event:', e);
         const post = {
           id: e.id,
           pubkey: e.pubkey,

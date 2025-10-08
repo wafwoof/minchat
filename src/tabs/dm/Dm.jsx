@@ -1,21 +1,32 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { X, SendHorizontal, User, MessageCircle, ArrowLeft } from 'lucide-preact';
+import { X, SendHorizontal, User, MessageCircle, ArrowLeft, UserPlus } from 'lucide-preact';
 import { nip17, nip19 } from 'nostr-tools';
 
 export default function DmTab({
-  config,
-  poolRef,
-  sk,
-  pk,
-  handle,
-  setHandle,
-  encryptionKey,
-  e2eEnabled,
-  setDmTabOpen
+  config, relays, poolRef,
+  sk, pk, handle,
+  setHandle, encryptionKey,
+  e2eEnabled, setDmTabOpen
 }) {
   const [conversations, setConversations] = useState(() => {
     const saved = localStorage.getItem('minchat-dm-conversations');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    
+    // pre-populate with default conversation
+    try {
+      const defaultPubkey = nip19.decode('npub12hva8marxu56mlycsnfhhlnc4yexehhf2r0tzayyxcs2mz07nu0sklwvrh').data;
+      return [{
+        pubkey: defaultPubkey,
+        name: `Minchat#${defaultPubkey.slice(-4)}`,
+        lastMessage: "Official Minchat support",
+        timestamp: Date.now()
+      }];
+    } catch (error) {
+      console.error('Failed to decode default npub:', error);
+      return [];
+    }
   });
   
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -70,9 +81,9 @@ export default function DmTab({
         limit: 1000
       };
 
-      const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
-      
-      globalSubRef.current = poolRef.current.subscribeMany(relays, filter, {
+      // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
+      // const relays = relays.dm;
+      globalSubRef.current = poolRef.current.subscribeMany(relays.dm, filter, {
         onevent: async (event) => {
           try {
             const rumor = nip17.unwrapEvent(event, sk);
@@ -148,10 +159,9 @@ export default function DmTab({
       limit: 500
     };
 
-    const relays = [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-    ];
-    subRef.current = poolRef.current.subscribeMany(relays, filter, {
+    // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
+    // const relays = relays.dm;
+    subRef.current = poolRef.current.subscribeMany(relays.dm, filter, {
       onevent: async (event) => {
         // console.log('Received gift wrap event:', event);
         try {
@@ -288,10 +298,7 @@ export default function DmTab({
         message.trim()
       );
       
-      const relays = [
-        'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      ];
-      
+      const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
       const newMessage = {
         id: `temp-${Date.now()}`,
         pubkey: pk,
@@ -426,7 +433,7 @@ export default function DmTab({
             overflow-y: auto;
           `}
         >
-          <div style="padding: 12px; border-bottom: 1px solid #333;">
+          <div style="display: flex; flex-direction: row; padding: 12px; border-bottom: 1px solid #333;">
             <input
               type="text"
               value={newRecipient}
@@ -434,7 +441,7 @@ export default function DmTab({
               placeholder="Enter the user's pubkey"
               style={`
                 width: 100%; 
-                margin-bottom: 8px; 
+                margin-bottom: 0px; 
                 padding: 8px; 
                 background: #111; 
                 border: 1px solid #333; 
@@ -447,7 +454,7 @@ export default function DmTab({
             <button
               onClick={addNewConversation}
               style={`
-                width: 100%; 
+                width: 50px;
                 padding: 8px;
                 background: #333;
                 border: 1px solid #444;
@@ -458,7 +465,7 @@ export default function DmTab({
                 ${isMobile ? 'font-size: 16px; touch-action: manipulation;' : ''}
               `}
             >
-              New Conversation
+              <UserPlus size={16} />
             </button>
           </div>
           

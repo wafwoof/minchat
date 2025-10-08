@@ -9,25 +9,30 @@ export default function SettingsTab({ generateKeys }) {
         <div class="logo">
           <img src="/favicon/favicon-96x96.png" alt="MinChat Logo" width="40" height="40" />
           <span>
-            MinChat Demo
+            Minchat Demo
           </span>
         </div>
         <div style="height: 20px;" />
         <h3>Info</h3>
         <p>
-          This is a simple hybrid nostr client. 4 event kinds are supported: Notes (1), Bitchat (20000/23333), and longform posts (30023).
+          This is a simple hybrid nostr client. 6 event kinds are supported: Notes (1), Bitchat (20000/23333), Longform & Wiki Posts (30023/30818), and even Gift-Wrapped Direct Messages (1059).
         </p>
         <br />
         <p>
-          MinChat supports proof-of-work and simple (but pretty solid) end-to-end encryption (E2EE) for channels and direct messages using AES-GCM.
+          Minchat supports proof-of-work and simple end-to-end encryption (E2EE) for channels and direct messages using AES-GCM.
         </p>
         <br />
         <p>
-          Note: tags are clickable in the longform explorer tab.
+          Note: this is mostly a demo/proof-of-concept, and comes with no warranty or guarantee of any kind. Use at your own risk.
         </p>
         <br />
         <p>
           Contact me if you have any questions or suggestions. Thanks.
+        </p>
+        <br />
+        <br />
+        <p>
+          To signup to nostr, you simply need a keypair. Press the button below to begin.
         </p>
         <div 
           style="margin-top: 20px;"

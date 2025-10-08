@@ -18,17 +18,37 @@ import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
   version: '0.0.4',
-  relays: [
-    'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-    'wss://relay.damus.io', 
-    'wss://relay.nostr.band', 
-    'wss://nostr-relay.zimage.com', 
-    'wss://offchain.pub',
-    'wss://relay-testnet.k8s.layer3.news'
-  ],
+  relays: {
+    main: [
+      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://relay.damus.io', 
+      'wss://relay.nostr.band', 
+      'wss://nostr-relay.zimage.com', 
+      'wss://offchain.pub',
+      'wss://relay-testnet.k8s.layer3.news'
+    ],
+    wiki: [
+      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://nos.lol',
+      'wss://relay.wikifreedia.xyz',
+      'wss://relay.nostr.band',
+    ],
+    market: [
+      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+      'wss://purplepag.es',
+      'wss://relay.primal.net',
+      'wss://relay.nostr.band'
+    ],
+    dm: [
+      'wss://tr7b9d5l-8080.usw2.devtunnels.ms'
+    ]
+  },
   kind1Channels: ['nostr', 'random', 'tech', 'news', 'art', 'politics'],
   kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
   favoriteChannels: [],
+  defaultChannel: 'minchat',
   powDifficulty: 8,
   encryptionKey: 'minchat-demo-key-0001',
   imagesEnabled: false
@@ -63,10 +83,9 @@ export default function App() {
     const saved = localStorage.getItem('minchat-handle');
     return saved ? JSON.parse(saved) : 'anon';
   });
-  // const [channel, setChannel] = useState('minchat');
   const [channel, setChannel] = useState(() => {
     const saved = localStorage.getItem('minchat-channel');
-    return saved ? JSON.parse(saved) : 'minchat';
+    return saved ? JSON.parse(saved) : config.defaultChannel;
   });
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -139,7 +158,7 @@ export default function App() {
   }, [channel]);
 
   useEffect(() => {
-    console.log('channel changed to:', channel);
+    console.log(`channel changed to: #${channel}`);
     if (connected) {
       changeChannel();
     }
@@ -168,6 +187,16 @@ export default function App() {
     };
   }, [pk]);
 
+  // persist relays config changes
+  const [relays, setRelays] = useState(() => {
+    const saved = localStorage.getItem('minchat-relays');
+    return saved ? JSON.parse(saved) : config.relays;
+  });
+  useEffect(() => {
+    localStorage.setItem('minchat-relays', JSON.stringify(relays));
+  }, [relays]);
+
+  // connect to relays and subscribe to messages
   function connect() {
     if (!pk) {
       alert('Generate keys first');
@@ -195,8 +224,8 @@ export default function App() {
         limit: 100
       };
 
-    const relays = config.relays;
-    subRef.current = poolRef.current.subscribeMany(relays, filter, {
+    // const relays = config.relays.main;
+    subRef.current = poolRef.current.subscribeMany(relays.main, filter, {
       onevent(e) {
         const d = new Date(e.created_at * 1000);
         setMessages(prev => {
@@ -208,22 +237,18 @@ export default function App() {
             time: d.toLocaleTimeString(),
             created_at: e.created_at
           };
-          // check if message already exists to avoid duplicates
           if (prev.some(msg => msg.id === newMessage.id)) {
             return prev;
           }
-          // add new message and sort by created_at (newest first)
           return [...prev, newMessage].sort((a, b) => b.created_at - a.created_at);
         });
       }
     });
-
   };
-
-  function disconnect() {
-    if (subRef.current) subRef.current.close();
-    setConnected(false);
-  };
+  // function disconnect() {
+  //   if (subRef.current) subRef.current.close();
+  //   setConnected(false);
+  // };
 
   function changeChannel() {
     if (poolRef.current && subRef.current) {
@@ -298,11 +323,8 @@ export default function App() {
       poolRef.current = new SimplePool();
     }
 
-    const relays = config.relays;
-    await poolRef.current.publish(
-      relays,
-      signed
-    );
+    // const relays = config.relays.main;
+    await poolRef.current.publish(relays.main, signed);
     setMessage('');
   };
 
@@ -343,6 +365,7 @@ export default function App() {
     return (
       <ExploreTab
         config={config}
+        relays={relays}
         poolRef={poolRef}
         exploreTabOpen={exploreTabOpen}
         setexploreTabOpen={setexploreTabOpen}
@@ -390,6 +413,7 @@ export default function App() {
     return (
       <MarketTab
         config={config}
+        relays={relays}
         poolRef={poolRef}
         marketTabOpen={marketTabOpen}
         setMarketTabOpen={setMarketTabOpen}
@@ -416,6 +440,8 @@ export default function App() {
     return (
       <SettingsTab 
         config={config}
+        relays={relays}
+        setRelays={setRelays}
         sk={sk}
         pk={pk}
         setSk={setSk}
@@ -449,6 +475,7 @@ export default function App() {
     return (
       <DmTab
         config={config}
+        relays={relays}
         poolRef={poolRef}
         sk={sk}
         pk={pk}
@@ -492,15 +519,17 @@ export default function App() {
             >
               #{channel}
             </span>
-            {/* {connected ? (
-              <Signal size={14} style="color: white;" title="Connected" />
-            ) : (
-              <SignalZero size={14} style="color: red;" title="Disconnected" />
-            )} */}
           </div>
           <div>
-            <span>e2ee </span>
-            <input type="checkbox" id="e2e" checked={e2eEnabled} onChange={(e) => setE2eEnabled(e.target.checked)} />
+            {/* <span>e2ee </span> */}
+            <Lock size={14} style="margin-right: 1px;" />
+            <span>e2e </span>
+            <input 
+              type="checkbox" 
+              id="e2e" 
+              checked={e2eEnabled} 
+              onChange={(e) => setE2eEnabled(e.target.checked)}
+            />
           </div>
         </div>
       </div>

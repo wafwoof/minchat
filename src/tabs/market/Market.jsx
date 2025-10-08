@@ -2,7 +2,7 @@ import { X, RotateCcw, Telescope, ShoppingCart } from 'lucide-preact';
 import { useState } from 'preact/hooks';
 
 export default function MarketTab({ 
-  config, poolRef, marketTabOpen, setMarketTabOpen, marketPosts, 
+  config, relays, poolRef, marketTabOpen, setMarketTabOpen, marketPosts, 
   setMarketPosts, loadingMarket, setLoadingMarket, lastFetchedMarketDatestamp, setLastFetchedMarketDatestamp,
   marketTag, setMarketTag
 }) {
@@ -26,16 +26,18 @@ export default function MarketTab({
       filter['#t'] = [marketTag];
     }
 
-    const relays = [
-      'wss://relay.damus.io',
-      'wss://nos.lol',
-      'wss://purplepag.es',
-      'wss://relay.primal.net',
-      'wss://relay.nostr.band'
-    ];
-    const sub = poolRef.current.subscribeMany(relays, filter, {
+    // const relays = [
+    //   'wss://relay.damus.io',
+    //   'wss://nos.lol',
+    //   'wss://purplepag.es',
+    //   'wss://relay.primal.net',
+    //   'wss://relay.nostr.band'
+    // ];
+    // const relays = config.relays.market;
+    // const relays = relays.market;
+    const sub = poolRef.current.subscribeMany(relays.market, filter, {
       onevent(e) {
-        console.log('Market event:', e);
+        // console.log('Market event:', e);
         const post = {
           id: e.id,
           pubkey: e.pubkey,
@@ -186,7 +188,7 @@ export default function MarketTab({
                   }}
                   onClick={() => {
                     navigator.clipboard.writeText(post.pubkey);
-                    alert('Pubkey copied! Use this to send a DM via your Nostr client.');
+                    alert('Pubkey copied.');
                   }}
                 >
                   Copy Pubkey
