@@ -569,8 +569,11 @@ export default function DmTab({
                     placeholder="Message"
                     style="flex: 1;"
                   />
-                  <button
-                    type="submit"
+                  <button 
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); }}
+                    onTouchStart={(e) => { e.preventDefault(); sendMessage(); }}
+                    // onClick={() => { sendMessage(); }}
                     class="sendButton"
                   >
                     <SendHorizontal size={16} />

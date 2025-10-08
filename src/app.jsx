@@ -9,7 +9,6 @@ import {
   ShoppingCart, Inbox
 } from 'lucide-preact';
 import { encrypt, decrypt } from './encryption';
-// import geohash from 'ngeohash';
 import LanderTab from './tabs/lander/Lander.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
 import ExploreTab from './tabs/explore/Explore.jsx';
@@ -42,7 +41,11 @@ const config = {
       'wss://relay.nostr.band'
     ],
     dm: [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms'
+      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://relay.mostr.pub',
+      'wss://relay.damus.io',
+      'wss://relay.primal.net',
+      'wss://nos.lol',
     ]
   },
   kind1Channels: ['nostr', 'random', 'tech', 'news', 'art', 'politics'],
@@ -92,6 +95,7 @@ export default function App() {
   const [mining, setMining] = useState(false);
   const poolRef = useRef(null);
   const subRef = useRef(null);
+  const inputRef = useRef(null);
   const [e2eEnabled, setE2eEnabled] = useState(() => {
     const saved = localStorage.getItem('minchat-e2e-enabled');
     return saved ? JSON.parse(saved) : false;
@@ -326,6 +330,13 @@ export default function App() {
     // const relays = config.relays.main;
     await poolRef.current.publish(relays.main, signed);
     setMessage('');
+    
+    // refocus the input to keep keyboard open on ios
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
   };
 
 
@@ -337,6 +348,7 @@ export default function App() {
       />
     );
   }
+
 
   // EXPLORE TAB
   const [exploreTabOpen, setexploreTabOpen] = useState(() => {
@@ -674,9 +686,7 @@ export default function App() {
             type="button"
             onClick={() => {
               const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
-              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) 
-                // && /\.(png|jpg|jpeg|gif|svg)$/i.test(imageUrl)
-              ) {
+              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
                 setMessage(message + ` ![Image](${imageUrl})`);
               }
             }}
@@ -686,6 +696,7 @@ export default function App() {
             <Image size={16} />
           </button>
           <input
+            ref={inputRef}
             type="text"
             value={message}
             onInput={(e) => setMessage(e.target.value)}
@@ -693,7 +704,10 @@ export default function App() {
             class=""
           />
           <button 
-            type="submit"
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); }}
+            onTouchStart={(e) => { e.preventDefault(); send(); }}
+            // onClick={() => { send(); }}
             class="sendButton"
           >
             <SendHorizontal size={16} />
