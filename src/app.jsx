@@ -149,10 +149,6 @@ export default function App() {
     }
   }, [pk]);
 
-  // useEffect(() => {
-  //   console.log(messages);
-  // }, [messages]);
-
   useEffect(() => {
     console.log('mining state changed:', mining);
   }, [mining]);
@@ -746,27 +742,6 @@ export default function App() {
             <ShoppingCart size={16} />
           </button>
         </div>
-        {/* <div>
-            <button
-              onClick={() => setChannel('minchat')}
-            >
-              <House size={16} />
-            </button>
-        </div> */}
-        {/* <div style="margin-right: 8px;">
-            <button
-              onClick={() => setChannel('9q')}
-            >
-              #9q
-            </button>
-        </div>
-        <div>
-            <button
-              onClick={() => setChannel('nostr')}
-            >
-              #nostr
-            </button>
-        </div> */}
         <div>
           <form onSubmit={(e) => { e.preventDefault(); changeChannel(); }} style="margin-bottom: 0px;">
             <select 
@@ -774,6 +749,12 @@ export default function App() {
               onChange={(e) => setChannel(e.target.value)}
               style="max-width: 100px;"
             >
+              {!config.kind1Channels.includes(channel) && !config.kind20000Channels.includes(channel) && (
+                <>
+                  <option value={channel}>#{channel}</option>
+                  <option disabled>──────────</option>
+                </>
+              )}
               <option disabled>Kind 1:</option>
               {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
                 <option value={ch}>#{ch}</option>
@@ -785,22 +766,6 @@ export default function App() {
             </select>
           </form>
         </div>
-        {/* <div style="margin-right: 8px;">
-          <button
-            onClick={() => setChatProtocol('bitchat')}
-            style={chatProtocol === 'nostr' ? 'font-weight: bold;' : '' }
-          >
-            bitchat
-          </button>
-        </div>
-        <div>
-          <button
-            onClick={() => setChatProtocol('nostr')}
-            style={chatProtocol === 'bitchat' ? 'font-weight: bold;' : '' }
-          >
-            nostr
-          </button>
-        </div> */}
         {mining && (
           <div>
             {/* <span>Mining PoW...</span> */}

@@ -82,6 +82,12 @@ export default function SettingsTab({
             value={channel} 
             onChange={(e) => setChannel(e.target.value)}
           >
+            {!config.kind1Channels.includes(channel) && !config.kind20000Channels.includes(channel) && (
+              <>
+                <option value={channel}>#{channel}</option>
+                <option disabled>──────────</option>
+              </>
+            )}
             <option disabled>Kind 1:</option>
             {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
               <option value={ch}>#{ch}</option>
