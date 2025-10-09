@@ -81,8 +81,6 @@ export default function DmTab({
         limit: 1000
       };
 
-      // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
-      // const relays = relays.dm;
       globalSubRef.current = poolRef.current.subscribeMany(relays.dm, filter, {
         onevent: async (event) => {
           try {
@@ -159,8 +157,6 @@ export default function DmTab({
       limit: 500
     };
 
-    // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
-    // const relays = relays.dm;
     subRef.current = poolRef.current.subscribeMany(relays.dm, filter, {
       onevent: async (event) => {
         // console.log('Received gift wrap event:', event);
@@ -298,7 +294,8 @@ export default function DmTab({
         message.trim()
       );
       
-      const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
+      // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
+      // const relays = relays.dm;
       const newMessage = {
         id: `temp-${Date.now()}`,
         pubkey: pk,
@@ -316,7 +313,7 @@ export default function DmTab({
         ]
       }));
       
-      await poolRef.current.publish(relays, giftWrap);
+      await poolRef.current.publish(relays.dm, giftWrap);
       
       setConversations(prev => prev.map(c => 
         c.pubkey === selectedConversation.pubkey 
