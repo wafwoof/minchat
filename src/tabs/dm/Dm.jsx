@@ -294,8 +294,6 @@ export default function DmTab({
         message.trim()
       );
       
-      // const relays = ['wss://tr7b9d5l-8080.usw2.devtunnels.ms'];
-      // const relays = relays.dm;
       const newMessage = {
         id: `temp-${Date.now()}`,
         pubkey: pk,

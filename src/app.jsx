@@ -24,7 +24,8 @@ const config = {
   },
   relays: {
     main: [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://relay.damus.io', 
       'wss://relay.nostr.band', 
       'wss://nostr-relay.zimage.com',
@@ -33,13 +34,15 @@ const config = {
       // 'wss://relay-testnet.k8s.layer3.news'
     ],
     wiki: [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://nos.lol',
       'wss://relay.wikifreedia.xyz',
       'wss://relay.nostr.band',
     ],
     market: [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://relay.damus.io',
       'wss://nos.lol',
       'wss://purplepag.es',
@@ -47,7 +50,8 @@ const config = {
       'wss://relay.nostr.band'
     ],
     dm: [
-      'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://relay.mostr.pub',
       'wss://relay.damus.io',
       // 'wss://relay.primal.net',
