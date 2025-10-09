@@ -54,8 +54,8 @@ const config = {
       'wss://nos.lol',
     ]
   },
-  kind1Channels: ['nostr', 'tech', 'news', 'politics', 'netsequé', 'penpalclub'],
-  kind20000Channels: ['minchat', '9q', '6g', 'c2', 'dr'],
+  kind1Channels: ['nostr', 'tech', 'news', 'politics', 'netsequé'],
+  kind20000Channels: ['penpalclub', 'minchat', '9q', '6g', 'c2', 'dr'],
   favoriteChannels: [],
   defaultChannel: 'minchat',
   powDifficulty: 8,
