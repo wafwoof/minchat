@@ -5,6 +5,8 @@ import {
 } from 'lucide-preact';
 import geohash from 'ngeohash';
 import { useRef, useState } from 'preact/hooks';
+// import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+import { hexToNpub, hexToNsec } from '../../encryption.js';
 
 export default function SettingsTab({
   config, relays, setRelays, sk, pk, setSk, setSettingsOpen, channel, setChannel,
@@ -168,13 +170,13 @@ export default function SettingsTab({
           Public Key:
         </p>
         <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-        {pk}
+          {hexToNpub(pk)}
         </p>
         <br />
         <button
           onClick={() => {
-            navigator.clipboard.writeText(pk);
-            alert('Public key copied to clipboard.');
+            navigator.clipboard.writeText(hexToNpub(pk));
+            alert('Npub copied to clipboard.');
           }}
         >
           <Copy size={16} style="margin-right: 8px;" />
@@ -199,7 +201,14 @@ export default function SettingsTab({
               userSelect: showSecretKey ? 'auto' : 'none'
             }}
           >
-            {showSecretKey ? `[${sk.toString()}]` : '[234,329,34,313,434,554,54,153,334,245,89,97,234,243,34,234,123,43,341,178,20,34,234]'}
+            {showSecretKey ? (() => {
+              try {
+                return hexToNsec(sk);
+              } catch (e) {
+                console.error('Error converting to nsec:', e, 'sk:', sk);
+                return 'Error: ' + e.message;
+              }
+            })() : 'nsec1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
           </p>
         </div>
         <br />

@@ -1,14 +1,14 @@
 import './app.css';
-import { useState, useEffect, useRef } from 'preact/hooks';
 import { render } from 'preact';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
+import { encrypt, decrypt, hexToNpub } from './encryption.js';
 import { 
   Lock, Settings, SendHorizontal,
   Pickaxe, Image, Telescope,
   ShoppingCart, Inbox, Copy,
   Trash2
 } from 'lucide-preact';
-import { encrypt, decrypt } from './encryption';
 import LanderTab from './tabs/lander/Lander.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
 import ExploreTab from './tabs/explore/Explore.jsx';
@@ -17,14 +17,18 @@ import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
   version: '0.0.6',
+  simplePool: { 
+    enablePing: false, 
+    enableReconnect: true 
+  },
   relays: {
     main: [
       'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
       'wss://relay.damus.io', 
       'wss://relay.nostr.band', 
-      'wss://nostr-relay.zimage.com', 
+      'wss://nostr-relay.zimage.com',
       'wss://offchain.pub',
-      'wss://relay-testnet.k8s.layer3.news'
+      // 'wss://relay-testnet.k8s.layer3.news'
     ],
     wiki: [
       'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
@@ -149,9 +153,9 @@ export default function App() {
     }
   }, [pk]);
 
-  useEffect(() => {
-    console.log('mining state changed:', mining);
-  }, [mining]);
+  // useEffect(() => {
+  //   console.log('mining state changed:', mining);
+  // }, [mining]);
 
   useEffect(() => {
     localStorage.setItem('minchat-channel', JSON.stringify(channel));
@@ -228,14 +232,12 @@ export default function App() {
       return;
     }
 
-    poolRef.current = new SimplePool();
+    poolRef.current = new SimplePool(config.simplePool);
     
     setMessages([]);
     setConnected(true);
 
     const now = Math.floor(Date.now() / 1000);
-    // const filter = config.kind1Channels.includes(channel)
-    // const filter = (chatProtocol === 'nostr' || config.kind1Channels.includes(channel))
     const filter = chatProtocol === 'nostr'
       ? {
         kinds: [1],
@@ -245,37 +247,35 @@ export default function App() {
       }
       : {
         kinds: [20000, 23333],
-        // '#t': [channel],
         '#g': [channel],
         since: now - 16000,
         limit: 100
       };
 
-    // const relays = config.relays.main;
-    subRef.current = poolRef.current.subscribeMany(relays.main, filter, {
-      onevent(e) {
-        const d = new Date(e.created_at * 1000);
-        setMessages(prev => {
-          const newMessage = {
-            id: e.id,
-            pubkey: e.pubkey,
-            content: e.content,
-            tags: e.tags,
-            time: d.toLocaleTimeString(),
-            created_at: e.created_at
-          };
-          if (prev.some(msg => msg.id === newMessage.id)) {
-            return prev;
-          }
-          return [...prev, newMessage].sort((a, b) => b.created_at - a.created_at);
-        });
-      }
-    });
+    try {
+      subRef.current = poolRef.current.subscribeMany(relays.main, filter, {
+        onevent(e) {
+          const d = new Date(e.created_at * 1000);
+          setMessages(prev => {
+            const newMessage = {
+              id: e.id,
+              pubkey: e.pubkey,
+              content: e.content,
+              tags: e.tags,
+              time: d.toLocaleTimeString(),
+              created_at: e.created_at
+            };
+            if (prev.some(msg => msg.id === newMessage.id)) {
+              return prev;
+            }
+            return [...prev, newMessage].sort((a, b) => b.created_at - a.created_at);
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Subscription failed:', error);
+    }
   };
-  // function disconnect() {
-  //   if (subRef.current) subRef.current.close();
-  //   setConnected(false);
-  // };
 
   function changeChannel() {
     if (poolRef.current && subRef.current) {
@@ -305,8 +305,7 @@ export default function App() {
       }
     }
 
-    // Determine kind based on protocol
-    // const isNostrProtocol = chatProtocol === 'nostr' || config.kind1Channels.includes(channel);
+    // determine kind based on protocol
     const isNostrProtocol = chatProtocol === 'nostr';
     const eventKind = isNostrProtocol ? 1 : 20000;
 
@@ -346,13 +345,16 @@ export default function App() {
     const signed = finalizeEvent(event, sk);
 
     if (!poolRef.current) {
-      poolRef.current = new SimplePool();
+      poolRef.current = new SimplePool(config.simplePool);
     }
 
-    // const relays = config.relays.main;
-    await poolRef.current.publish(relays.main, signed);
+    try {
+      await poolRef.current.publish(relays.main, signed);
+    } catch (error) {
+      console.error('Failed to publish event:', error);
+    }
+
     setMessage('');
-    
     // refocus the input to keep keyboard open on ios
     setTimeout(() => {
       if (inputRef.current) {
@@ -523,7 +525,7 @@ export default function App() {
     );
   }
 
-  async function deletePost(eventId) {
+  async function deleteEvent(eventId) {
     if (!sk) {
       alert('Cannot delete: No secret key');
       return;
@@ -543,7 +545,7 @@ export default function App() {
     };
 
     setMining(true);
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 100)); // wait a tick to allow ui to update
     try {
       event = nip13.minePow(event, config.powDifficulty);
     } catch (e) {
@@ -554,13 +556,28 @@ export default function App() {
     const signed = finalizeEvent(event, sk);
 
     if (!poolRef.current) {
-      poolRef.current = new SimplePool();
+      poolRef.current = new SimplePool(config.simplePool);
     }
 
     await poolRef.current.publish(relays.main, signed);
     
     // remove the message from local state
     setMessages(prev => prev.filter(msg => msg.id !== eventId));
+  }
+
+
+  function getUserColor(pubkey) {
+    // [djb2 sorta](http://www.cse.yorku.ca/~oz/hash.html)
+    let hash = 0;
+    for (let i = 0; i < pubkey.length; i++) {
+      hash = pubkey.charCodeAt(i) + (hash << 5) - hash;
+      // hash = pubkey.charCodeAt(i) + (hash * 31);
+    }
+    //const hue = Math.abs(hash) % 360; // 0 - 359
+    const hue = (Math.abs(hash) * 137.508) % 360;
+    // hue saturation lightness
+    // return `hsl(${hue}, 70%, 45%)`;
+    return `hsl(${hue}, 45%, 65%)`; // nice pastel colors
   }
 
 
@@ -626,7 +643,7 @@ export default function App() {
           
           // if encrypted and we have e2e enabled, try to decrypt
           if (isEncrypted && e2eEnabled) {
-            // Use a ref to store decrypted content to avoid re-rendering issues
+            // use a ref to store decrypted content to avoid re-rendering issues
             const [decryptedContent, setDecryptedContent] = useState('[Encrypted]');
             
             useEffect(() => {
@@ -652,10 +669,7 @@ export default function App() {
                 </div>
               );
             }
-          } 
-          // else if (isEncrypted && !e2eEnabled) {
-          //   displayContent = '[Encrypted message - enable e2e to decrypt]';
-          // }
+          }
           return (
             <div key={msg.id} class="message">
               <div class="messageHeader">
@@ -663,20 +677,21 @@ export default function App() {
                   onClick={() => {
                     setMessage(message + `@${msg.tags.find(t => t[0] === 'n') ? msg.tags.find(t => t[0] === 'n')[1] : 'anon'}#${msg.pubkey.slice(-4)} `);
                   }}
-                  style="cursor: pointer;"
+                  style={`cursor: pointer; color: ${getUserColor(msg.pubkey)};`}
                 >
                   @{msg.tags.find(t => t[0] === 'n') ? msg.tags.find(t => t[0] === 'n')[1] : 'anon'}#{msg.pubkey.slice(-4)}
                 </strong>
                 <span>{msg.time}</span>
-                {msg.tags.some(t => t[0] === 'nonce') && (<div style="display: flex;"><Pickaxe size={14} style="margin-left: 0;" /></div>)}
                 {isEncrypted && (<div style="display: flex;"><Lock size={14} style="margin-left: 0;" /></div>)}
+                {msg.tags.some(t => t[0] === 'nonce') && (<div style="display: flex;"><Pickaxe size={14} style="margin-left: 0;" /></div>)}
                 {msg.pubkey !== pk && (
                   <Copy 
                     size={14} 
-                    style="margin-left: 8px; cursor: pointer;"
+                    style="cursor: pointer;"
                     onClick={() => {
-                      navigator.clipboard.writeText(msg.pubkey).then(() => {
-                        alert('Public key copied to clipboard');
+                      // navigator.clipboard.writeText(msg.pubkey).then(() => {
+                      navigator.clipboard.writeText(hexToNpub(msg.pubkey)).then(() => {
+                        alert('Npub copied to clipboard.');
                       })
                     }}
                   />
@@ -684,8 +699,8 @@ export default function App() {
                 {msg.pubkey === pk && (
                   <Trash2 
                     size={14} 
-                    style="margin-left: 8px; cursor: pointer;"
-                    onClick={() => deletePost(msg.id)}
+                    style="cursor: pointer;"
+                    onClick={() => deleteEvent(msg.id)}
                   />
                 )}
               </div>
@@ -698,14 +713,14 @@ export default function App() {
       </div>
 
       <div class="buttonContainer">
-        <div style="margin-right: 8px;">
+        <div>
           <button
             onClick={() => setSettingsOpen(true)}
           >
             <Settings size={16} />
           </button>
         </div>
-        <div style="margin-right: 8px;">
+        <div>
           <button
             onClick={() => {
               setDmTabOpen(true);
@@ -714,28 +729,14 @@ export default function App() {
             <Inbox size={16} />
           </button>
         </div>
-        {/* <div style="margin-right: 8px;">
-          <button
-            onClick={() => {
-              const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
-              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) 
-                // && /\.(png|jpg|jpeg|gif|svg)$/i.test(imageUrl)
-              ) {
-                setMessage(message + ` ![Image](${imageUrl})`);
-              }
-            }}
-          >
-            <Image size={16} />
-          </button>
-        </div> */}
-        <div style="margin-right: 8px;">
+        <div>
           <button
             onClick={() => setexploreTabOpen(true)}
           >
             <Telescope size={16} />
           </button>
         </div>
-        <div style="margin-right: 8px;">
+        <div>
           <button
             onClick={() => setMarketTabOpen(true)}
           >
@@ -769,7 +770,10 @@ export default function App() {
         {mining && (
           <div>
             {/* <span>Mining PoW...</span> */}
-            <Pickaxe size={16} class="miningIcon" />
+            <Pickaxe 
+              size={16} 
+              class="miningIcon" 
+            />
           </div>
         )}
       </div>

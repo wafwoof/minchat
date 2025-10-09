@@ -1,3 +1,5 @@
+import { nip19 } from 'nostr-tools';
+
 const encrypt = async (message, key) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
@@ -21,7 +23,6 @@ const encrypt = async (message, key) => {
   combined.set(new Uint8Array(encrypted), iv.length);
   return btoa(String.fromCharCode(...combined));
 };
-
 const decrypt = async (encryptedMessage, key) => {
   try {
     const encoder = new TextEncoder();
@@ -50,4 +51,26 @@ const decrypt = async (encryptedMessage, key) => {
   }
 };
 
-export { encrypt, decrypt };
+
+function hexToNpub(hex) {
+  try {
+    return nip19.npubEncode(hex);
+  } catch (e) {
+    console.error('Failed to encode npub:', e);
+    return hex;
+  }
+}
+function hexToNsec(hex) {
+  try {
+    return nip19.nsecEncode(hex);
+  } catch (e) {
+    console.error('Failed to encode nsec:', e);
+    return hex;
+  }
+}
+
+
+export { 
+  encrypt, decrypt, 
+  hexToNpub, hexToNsec
+};

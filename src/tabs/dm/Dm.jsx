@@ -75,7 +75,7 @@ export default function DmTab({
   useEffect(() => {
     if (poolRef.current && pk && sk) {
       const filter = {
-        kinds: [1059],
+        kinds: [1059], // gift-wrapped DMs
         '#p': [pk],
         since: Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60), // Last 30 days
         limit: 1000
@@ -153,7 +153,7 @@ export default function DmTab({
 
     // const now = Math.floor(Date.now() / 1000);
     const filter = {
-      kinds: [1059],
+      kinds: [1059], // gift-wrapped DMs
       '#p': [pk],
       since: 0,
       limit: 500
@@ -415,12 +415,11 @@ export default function DmTab({
             </div>
           ) : (
             <span 
-              style="margin-left: 8px; cursor: pointer;"
+              style="cursor: pointer; padding: 4px 0 0 4px;"
               onClick={startEditingHandle}
               title="Click to edit handle"
             >
               {selectedConversation 
-                // && !showConversationsList 
                 ? `@${handle}#${pk?.slice(-4)} → @${selectedConversation.name}`
                 : `@${handle}#${pk?.slice(-4)}`
               }
@@ -430,7 +429,7 @@ export default function DmTab({
         <div class="right">
           <button
             onClick={() => setDmTabOpen(false)}
-            style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
+            style="background: none; border: none; color: white; cursor: pointer; padding: 8px 8px 0 0;"
           >
             <X size={18} />
           </button>
@@ -448,7 +447,10 @@ export default function DmTab({
             overflow-y: auto;
           `}
         >
-          <div style="display: flex; flex-direction: row; padding: 12px; border-bottom: 1px solid #333;">
+          <div 
+            class="newConversationContainer"
+            style="display: flex; flex-direction: row; padding: 12px 8px; border-bottom: 1px solid #333;"
+          >
             <input
               type="text"
               value={newRecipient}
@@ -492,7 +494,7 @@ export default function DmTab({
               key={conv.pubkey}
               onClick={() => setSelectedConversation(conv)}
               style={`
-                padding: 12px; 
+                padding: 12px 8px; 
                 cursor: pointer; 
                 border-bottom: 1px solid #333;
                 background: ${selectedConversation?.pubkey === conv.pubkey ? '#2a2a2a' : 'transparent'};

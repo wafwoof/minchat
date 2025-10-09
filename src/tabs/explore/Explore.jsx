@@ -6,7 +6,7 @@ export default function ExploreTab({
   setLongformPosts, loadingLongform, setLoadingLongform, lastFetchedDatestamp, setLastFetchedDatestamp,
   longformTag, setLongformTag
 }) {
-  // Add state for selected kind
+  // add state for selected kind
   // const [selectedKind, setSelectedKind] = useState('30023'); // default to longform, not wiki
   const [selectedKind, setSelectedKind] = useState(() => {
     const saved = localStorage.getItem('exploreSelectedKind');
@@ -26,7 +26,7 @@ export default function ExploreTab({
     
     const now = Math.floor(Date.now() / 1000);
     const filter = {
-      kinds: selectedKind ? [parseInt(selectedKind)] : [30023, 30818],
+      kinds: selectedKind ? [parseInt(selectedKind)] : [30023, 30818], // longform & wiki
       since: now - 604800, // last 7 days
       limit: 15
     };
@@ -37,10 +37,10 @@ export default function ExploreTab({
     }
 
     // wiki uses its own set of relays because most don't carry wiki posts
-    // const relays = (selectedKind === '30818' ? relays.wiki : relays.main);
-    let exploreRelays = relays.main;
-    if (selectedKind === '30818') exploreRelays = relays.wiki;
-    const sub = poolRef.current.subscribeMany(exploreRelays, filter, {
+    const sub = poolRef.current.subscribeMany(
+      selectedKind === '30818' ? relays.wiki : relays.main,
+      filter, 
+    {
       onevent(e) {
         // console.log('Explore event:', e);
         const post = {
@@ -76,7 +76,7 @@ export default function ExploreTab({
 
   return (
     <section class="appContainer">
-      <div style="width: 100%; padding: 4px 16px;">
+      <div style="width: 100%; padding: 4px 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div class="left" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
             <Telescope size={20} />
@@ -106,7 +106,11 @@ export default function ExploreTab({
                 <option value="30818">Wiki</option>
               </select>
               <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;">
-                <SlidersHorizontal size={16} color="#fff" />
+                <SlidersHorizontal 
+                  size={16} 
+                  color="#fff" 
+                  style="margin-top: 2px"
+                />
               </div>
             </div>
           <input

@@ -1,5 +1,6 @@
-import { X, RotateCcw, Telescope, ShoppingCart } from 'lucide-preact';
+import { X, RotateCcw, Telescope, ShoppingCart, Copy } from 'lucide-preact';
 import { useState } from 'preact/hooks';
+import { hexToNpub } from '../../encryption.js';
 
 export default function MarketTab({ 
   config, relays, poolRef, marketTabOpen, setMarketTabOpen, marketPosts, 
@@ -26,15 +27,6 @@ export default function MarketTab({
       filter['#t'] = [marketTag];
     }
 
-    // const relays = [
-    //   'wss://relay.damus.io',
-    //   'wss://nos.lol',
-    //   'wss://purplepag.es',
-    //   'wss://relay.primal.net',
-    //   'wss://relay.nostr.band'
-    // ];
-    // const relays = config.relays.market;
-    // const relays = relays.market;
     const sub = poolRef.current.subscribeMany(relays.market, filter, {
       onevent(e) {
         // console.log('Market event:', e);
@@ -87,7 +79,7 @@ export default function MarketTab({
 
   return (
     <section class="appContainer">
-      <div style="width: 100%; padding: 4px 16px;">
+      <div style="width: 100%; padding: 4px 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div class="left" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
             <ShoppingCart size={20} />
@@ -187,11 +179,18 @@ export default function MarketTab({
                     marginTop: '40px'
                   }}
                   onClick={() => {
-                    navigator.clipboard.writeText(post.pubkey);
-                    alert('Pubkey copied.');
+                    // navigator.clipboard.writeText(post.pubkey);
+                    navigator.clipboard.writeText(hexToNpub(post.pubkey));
+                    alert('Npub copied to clipboard.');
                   }}
                 >
-                  Copy Pubkey
+                  <Copy 
+                    size={14}
+                    style="margin-right: 8px;"
+                  />
+                  <span>
+                    Copy Npub
+                  </span>
                 </button>
               </div>
 
