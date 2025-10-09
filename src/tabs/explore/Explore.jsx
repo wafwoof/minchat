@@ -27,7 +27,8 @@ export default function ExploreTab({
     const now = Math.floor(Date.now() / 1000);
     const filter = {
       kinds: selectedKind ? [parseInt(selectedKind)] : [30023, 30818], // longform & wiki
-      since: now - 604800, // last 7 days
+      // since: now - 604800, // last 7 days
+      since: now - 2592000, // last 30 days
       limit: 15
     };
 

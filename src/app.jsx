@@ -29,6 +29,7 @@ const config = {
       'wss://relay.nostr.band', 
       'wss://nostr-relay.zimage.com',
       'wss://offchain.pub',
+      // 'wss://articles.layer3.news',
       // 'wss://relay-testnet.k8s.layer3.news'
     ],
     wiki: [
@@ -208,6 +209,7 @@ export default function App() {
     setPk(null);
   };
 
+  // auto-connect when pk is set
   useEffect(() => {
     if (pk) {
       connect();
@@ -243,13 +245,15 @@ export default function App() {
       ? {
         kinds: [1],
         '#t': [channel],
-        since: now - 16000,
+        // since: now - 16000,
+        since: 0,
         limit: 100
       }
       : {
         kinds: [20000, 23333],
         '#g': [channel],
-        since: now - 16000,
+        // since: now - 16000, // last ~4.5 hours
+        since: now - 604800, // last 7 days
         limit: 100
       };
 
@@ -333,7 +337,7 @@ export default function App() {
     };
 
     setMining(true);
-    await new Promise(r => setTimeout(r, 100)); // allow UI to update
+    await new Promise(r => setTimeout(r, 100)); // allow ui to update
     try {
       // console.log('mining PoW...');
       // event = event || {};

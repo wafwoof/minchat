@@ -18,7 +18,8 @@ export default function MarketTab({
     const now = Math.floor(Date.now() / 1000);
     const filter = {
       kinds: [30402], // classified listings
-      since: now - 604800, // last 7 days
+      // since: now - 604800, // last 7 days
+      since: now - 2592000, // last 30 days
       limit: 20
     };
 
