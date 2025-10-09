@@ -253,7 +253,8 @@ export default function App() {
         kinds: [20000, 23333],
         '#g': [channel],
         // since: now - 16000, // last ~4.5 hours
-        since: now - 604800, // last 7 days
+        since: now - 18000, // last 5 hours
+        // since: now - 604800, // last 7 days
         limit: 100
       };
 
