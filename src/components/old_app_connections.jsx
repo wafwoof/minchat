@@ -3,18 +3,18 @@ import { render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Analytics } from "@vercel/analytics/react";
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
-import { encrypt, decrypt, hexToNpub } from './encryption.js';
+import { encrypt, decrypt, hexToNpub } from '../encryption.js';
 import { 
   Lock, Settings, SendHorizontal,
   Pickaxe, Image, Telescope,
   ShoppingCart, Inbox, Copy,
   Trash2
 } from 'lucide-preact';
-import LanderTab from './tabs/lander/Lander.jsx';
-import SettingsTab from './tabs/settings/Settings.jsx';
-import ExploreTab from './tabs/explore/Explore.jsx';
-import MarketTab from './tabs/market/Market.jsx';
-import DmTab from './tabs/dm/Dm.jsx';
+import LanderTab from '../tabs/lander/Lander.jsx';
+import SettingsTab from '../tabs/settings/Settings.jsx';
+import ExploreTab from '../tabs/explore/Explore.jsx';
+import MarketTab from '../tabs/market/Market.jsx';
+import DmTab from '../tabs/dm/Dm.jsx';
 
 const config = {
   version: '0.0.6',
@@ -155,6 +155,10 @@ export default function App() {
     }
   }, [pk]);
 
+  // useEffect(() => {
+  //   console.log('mining state changed:', mining);
+  // }, [mining]);
+
   useEffect(() => {
     localStorage.setItem('minchat-channel', JSON.stringify(channel));
   }, [channel]);
@@ -162,16 +166,13 @@ export default function App() {
   // when the channel changes, auto-switch protocol to the correct one
   useEffect(() => {
     console.log(`channel changed to: #${channel}`);
-    const newProtocol = config.kind1Channels.includes(channel) ? 'nostr' : 'bitchat';
-    
-    // only update protocol if it's different from current
-    if (newProtocol !== chatProtocol) {
-      setChatProtocol(newProtocol);
+    if (config.kind1Channels.includes(channel)) {
+      setChatProtocol('nostr');
     } else {
-      // protocol is the same, just reconnect with new channel
-      if (connected) {
-        changeChannel();
-      }
+      setChatProtocol('bitchat');
+    }
+    if (connected) {
+      changeChannel();
     }
   }, [channel]);
 
@@ -191,10 +192,7 @@ export default function App() {
       setInitialChangeChannelDone(true);
       return;
     }
-    // reconnect when protocol changes
-    if (connected) {
-      changeChannel();
-    }
+    changeChannel();
   }, [chatProtocol]);
 
   const generateKeys = () => {
@@ -213,7 +211,7 @@ export default function App() {
 
   // auto-connect when pk is set
   useEffect(() => {
-    if (pk && !connected) {
+    if (pk) {
       connect();
     }
     return () => {
@@ -235,11 +233,6 @@ export default function App() {
     if (!pk) {
       alert('Generate keys first');
       return;
-    }
-
-    // close existing connection before creating new one
-    if (subRef.current) {
-      subRef.current.close();
     }
 
     poolRef.current = new SimplePool(config.simplePool);
@@ -268,7 +261,6 @@ export default function App() {
     try {
       subRef.current = poolRef.current.subscribeMany(relays.main, filter, {
         onevent(e) {
-          console.log('Event:', e);
           const d = new Date(e.created_at * 1000);
           setMessages(prev => {
             const newMessage = {
@@ -292,22 +284,13 @@ export default function App() {
   };
 
   function changeChannel() {
-    if (!poolRef.current || !subRef.current) {
-      // if not connected yet, just connect
-      if (pk) {
-        connect();
-      }
-      return;
+    if (poolRef.current && subRef.current) {
+      subRef.current.close();
+      connect();
+    } else {
+      alert('Connect first');
     }
-    
-    // close existing subscription
-    subRef.current.close();
-    subRef.current = null;
-    
-    // clear messages and reconnect
-    setMessages([]);
-    connect();
-  }
+  };
 
   async function send() {
     if (!sk) {
