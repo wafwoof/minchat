@@ -1,6 +1,7 @@
 import './app.css';
 import { render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { Analytics } from "@vercel/analytics/react";
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
 import { encrypt, decrypt, hexToNpub } from './encryption.js';
 import { 
@@ -641,35 +642,46 @@ export default function App() {
           const isEncrypted = msg.tags.some(tag => tag[0] === 'encrypted');
           let displayContent = msg.content;
           
-          // if encrypted and we have e2e enabled, try to decrypt
+          // if encrypted and we have e2e enabled, show decrypted version
           if (isEncrypted && e2eEnabled) {
-            // use a ref to store decrypted content to avoid re-rendering issues
-            const [decryptedContent, setDecryptedContent] = useState('[Encrypted]');
+            displayContent = '[Encrypted]';
             
-            useEffect(() => {
-              decrypt(msg.content, encryptionKey)
-                .then(setDecryptedContent)
-                .catch(() => setDecryptedContent('[Decryption failed]'));
-            }, [msg.content]);
+            // decrypt asynchronously and update ui when ready
+            decrypt(msg.content, encryptionKey)
+              .then(decrypted => {
+                // check for markdown style image ![alt](url)
+                const mdImageRegex = /!\[.*?\]\((.*?)\)/;
+                const mdImageMatch = decrypted.match(mdImageRegex);
+                
+                if (mdImageMatch && mdImageMatch[1] && (mdImageMatch[1].startsWith('http://') || mdImageMatch[1].startsWith('https://'))) {
+                  // store image info in the message object
+                  msg.decryptedImage = mdImageMatch[1];
+                  msg.decryptedText = decrypted.replace(mdImageRegex, '');
+                } else {
+                  msg.decryptedText = decrypted;
+                }
+                
+                // trigger re-render
+                setMessages([...messages]);
+              })
+              .catch(() => {
+                msg.decryptedText = '[Decryption failed]';
+                setMessages([...messages]);
+              });
             
-            displayContent = decryptedContent;
-
-            // check for markdown style image ![alt](url)
-            const mdImageRegex = /!\[.*?\]\((.*?)\)/;
-            const mdImageMatch = displayContent.match(mdImageRegex);
-            // const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|svg))/i;
-            // const urlMatch = displayContent.match(urlRegex);
-            //const allowedDomains = ['i.imgur.com', 'imgur.com', 'i.redd.it', 'media.tenor.com', 'media.giphy.com', 'pbs.twimg.com', 'cdn.discordapp.com'];
-            if (mdImageMatch && mdImageMatch[1] && (mdImageMatch[1].startsWith('http://') || mdImageMatch[1].startsWith('https://'))) {
-              const imageUrl = mdImageMatch[1];
+            // display cached decrypted content if available
+            if (msg.decryptedImage) {
               displayContent = (
                 <div>
-                  <img src={imageUrl} alt="Image" style="max-width: 200px; max-height: 200px;" />
-                  <div>{displayContent.replace(mdImageRegex, '')}</div>
+                  <img src={msg.decryptedImage} alt="Image" style="max-width: 200px; max-height: 200px;" />
+                  <div>{msg.decryptedText}</div>
                 </div>
               );
+            } else if (msg.decryptedText) {
+              displayContent = msg.decryptedText;
             }
           }
+          
           return (
             <div key={msg.id} class="message">
               <div class="messageHeader">
@@ -815,4 +827,13 @@ export default function App() {
   );
 }
 
-render(<App />, document.getElementById('app'));
+function AppLayout() {
+  return (
+    <>
+      <App />
+      <Analytics />
+    </>
+  );
+}
+
+render(<AppLayout />, document.getElementById('app'));
