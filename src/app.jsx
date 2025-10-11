@@ -25,7 +25,7 @@ const config = {
   relays: {
     main: [
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://economics-grain-soup-diana.trycloudflare.com',
+      'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://relay.damus.io', 
       'wss://relay.nostr.band', 
       'wss://nostr-relay.zimage.com',
@@ -35,14 +35,14 @@ const config = {
     ],
     wiki: [
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://economics-grain-soup-diana.trycloudflare.com',
+      'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://nos.lol',
       'wss://relay.wikifreedia.xyz',
       'wss://relay.nostr.band',
     ],
     market: [
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://economics-grain-soup-diana.trycloudflare.com',
+      'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://relay.damus.io',
       'wss://nos.lol',
       'wss://purplepag.es',
@@ -51,7 +51,7 @@ const config = {
     ],
     dm: [
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://economics-grain-soup-diana.trycloudflare.com',
+      'wss://commission-collect-shore-genius.trycloudflare.com',
       // 'wss://relay.mostr.pub',
       'wss://relay.damus.io',
       // 'wss://relay.primal.net',
