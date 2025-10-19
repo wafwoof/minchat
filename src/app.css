@@ -6,6 +6,15 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+:root {
+  --primary-color: #1a1a1a;
+  --secondary-color: #222222;
+  --accent-color: #444444;
+  --highlight-color: #6c6c6c;
+  --text-color: rgb(230, 230, 230);
+  --safe-area-inset-top: 0px;
+  --safe-area-inset-bottom: 12px;
+}
 html {
   width: 100%;
   height: 100%;
@@ -13,10 +22,10 @@ html {
   overflow: hidden;
 }
 body {
-  color: rgb(230, 230, 230);
+  color: var(--text-color);
   overflow: hidden;
-  overscroll-behavior: none; /* Disable pull-to-refresh */
-  -webkit-overflow-scrolling: touch; /* Maintain smooth scrolling */
+  overscroll-behavior: none; /* disable pull-to-refresh */
+  -webkit-overflow-scrolling: touch; /* maintain smooth scrolling */
 }
 
 #app {
@@ -202,13 +211,19 @@ input:focus {
   /* gap: 8px;
   padding: 2px; */
 }
+@media screen and (max-width: 600px) {
+  .userInputContainer {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+}
 .userInputContainer form {
   display: flex;
   flex: 1;
   /* gap: 8px; */
 }
 .userInputContainer .sendButton {
-  width: 64px;
+  width: 44px;
   border: 1px solid #ccc;
   border-left: 0;
   background-color: #222;
@@ -216,7 +231,7 @@ input:focus {
 .userInputContainer input {
   height: 44px;
   flex: 1;
-  padding: 8px;
+  padding: 4px 7px;
   border: 1px solid #ccc;
   background-color: #222;
   color: white;

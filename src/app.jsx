@@ -24,8 +24,9 @@ const config = {
   },
   relays: {
     main: [
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://relay.damus.io', 
       'wss://relay.nostr.band', 
       'wss://nostr-relay.zimage.com',
@@ -34,15 +35,17 @@ const config = {
       // 'wss://relay-testnet.k8s.layer3.news'
     ],
     wiki: [
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://nos.lol',
       'wss://relay.wikifreedia.xyz',
       'wss://relay.nostr.band',
     ],
     market: [
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://commission-collect-shore-genius.trycloudflare.com',
       'wss://relay.damus.io',
       'wss://nos.lol',
       'wss://purplepag.es',
@@ -50,8 +53,9 @@ const config = {
       'wss://relay.nostr.band'
     ],
     dm: [
+      'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://commission-collect-shore-genius.trycloudflare.com',
       // 'wss://relay.mostr.pub',
       'wss://relay.damus.io',
       // 'wss://relay.primal.net',
@@ -59,7 +63,7 @@ const config = {
     ]
   },
   kind1Channels: ['nostr', 'tech', 'news', 'politics', 'netsequé'],
-  kind20000Channels: ['penpalclub', 'minchat', '9q', '6g', 'c2', 'dr'],
+  kind20000Channels: ['bitchat', 'penpalclub', 'minchat', '9q', '6g', 'c2'],
   favoriteChannels: [],
   defaultChannel: 'minchat',
   powDifficulty: 8,
@@ -826,7 +830,7 @@ export default function App() {
               }
             }}
             class="sendButton"
-            style="width: 45px; border-left: 1px solid #ccc; border-right: none;"
+            style="width: 44px; border-left: 1px solid #ccc; border-right: none;"
           >
             <Image size={16} />
           </button>
