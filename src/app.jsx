@@ -4,12 +4,8 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Analytics } from "@vercel/analytics/react";
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
 import { encrypt, decrypt, hexToNpub } from './encryption.js';
-import { 
-  Lock, Settings, SendHorizontal,
-  Pickaxe, Image, Telescope,
-  ShoppingCart, Inbox, Copy,
-  Trash2
-} from 'lucide-preact';
+// import { Lock, Settings, SendHorizontal, Pickaxe, Image, Telescope, ShoppingCart, Inbox, Copy, Trash2 } from 'lucide-preact';
+import ChatTab from './tabs/chat/Chat.jsx';
 import LanderTab from './tabs/lander/Lander.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
 import ExploreTab from './tabs/explore/Explore.jsx';
@@ -18,6 +14,7 @@ import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
   version: '0.0.6',
+  revision: '2025-10-18',
   simplePool: { 
     enablePing: false, 
     enableReconnect: true 
@@ -230,9 +227,34 @@ export default function App() {
   }, [pk]);
 
   // persist relays config changes
+  // const [relays, setRelays] = useState(() => {
+  //   const saved = localStorage.getItem('minchat-relays');
+  //   return saved ? JSON.parse(saved) : config.relays;
+  // });
   const [relays, setRelays] = useState(() => {
-    const saved = localStorage.getItem('minchat-relays');
-    return saved ? JSON.parse(saved) : config.relays;
+    try {
+      const savedRev = localStorage.getItem('minchat-revision');
+      const savedRelays = localStorage.getItem('minchat-relays');
+      // if no version or version mismatch, reset relays to factory defaults
+      if (!savedRev || savedRev !== config.revision) {
+        try {
+          localStorage.setItem('minchat-relays', JSON.stringify(config.relays));
+          localStorage.setItem('minchat-revision', config.revision);
+        } catch (error) {
+          console.error('Failed to reset relays to factory defaults:', error);
+        }
+        return config.relays;
+      }
+      return savedRelays ? JSON.parse(savedRelays) : config.relays;
+    } catch (error) {
+      console.error('Failed to load relays from localStorage:', error);
+      try { 
+        localStorage.removeItem('minchat-relays'); 
+      } catch (error) {
+        // ignore
+      }
+      return config.relays;
+    }
   });
   useEffect(() => {
     localStorage.setItem('minchat-relays', JSON.stringify(relays));
@@ -275,22 +297,22 @@ export default function App() {
 
     try {
       subRef.current = poolRef.current.subscribeMany(relays.main, filter, {
-        onevent(e) {
-          console.log('Event:', e);
-          const d = new Date(e.created_at * 1000);
+        onevent(event) {
+          console.log('Event:', event);
+          const date = new Date(event.created_at * 1000);
           setMessages(prev => {
             const newMessage = {
-              id: e.id,
-              pubkey: e.pubkey,
-              content: e.content,
-              tags: e.tags,
-              time: d.toLocaleTimeString(),
-              created_at: e.created_at
+              id: event.id,
+              pubkey: event.pubkey,
+              content: event.content,
+              tags: event.tags,
+              time: date.toLocaleTimeString(),
+              created_at: event.created_at
             };
             if (prev.some(msg => msg.id === newMessage.id)) {
               return prev;
             }
-            return [...prev, newMessage].sort((a, b) => b.created_at - a.created_at);
+            return [...prev, newMessage].sort((m1, m2) => m2.created_at - m1.created_at);
           });
         }
       });
@@ -614,246 +636,32 @@ export default function App() {
 
   // MAIN CHAT UI
   return (
-    <section class="appContainer">
-      <div class="keyContainer">
-        {pk && (
-          <div 
-            class="left"
-            onClick={() => {
-              // const newHandle = prompt('Enter your handle (without @):', handle);
-              // if (newHandle) setHandle(newHandle.replace(/@/g, '').slice(0, 20));
-              if (chatProtocol === 'nostr') {
-                setChatProtocol('bitchat');
-              } else {
-                setChatProtocol('nostr');
-              }
-            }}
-          >
-            <span>
-              {chatProtocol}/
-            </span>
-            <span>
-              @{handle}#{pk.slice(-4)}
-            </span>
-          </div>
-        )}
-        <div class="right">
-          <div>
-            <span
-              style="margin-right: 4px; cursor: pointer;"
-              onClick={() => {
-                const newChannel = prompt('Enter channel name (without #):', channel);
-                if (newChannel) {
-                  setChannel(newChannel.replace(/#/g, '').slice(0, 20));
-                }
-              }}
-            >
-              #{channel}
-            </span>
-          </div>
-          <div>
-            {/* <span>e2ee </span> */}
-            <Lock size={14} style="margin-right: 1px;" />
-            <span>e2e </span>
-            <input 
-              type="checkbox" 
-              id="e2e" 
-              checked={e2eEnabled} 
-              onChange={(e) => setE2eEnabled(e.target.checked)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="messagesContainer">
-        <div style={{ height: '8px', flexShrink: 0 }} />
-        {messages.map(msg => {
-          // check if message is encrypted
-          const isEncrypted = msg.tags.some(tag => tag[0] === 'encrypted');
-          let displayContent = msg.content;
-          
-          // if encrypted and we have e2e enabled, show decrypted version
-          if (isEncrypted && e2eEnabled) {
-            displayContent = '[Encrypted]';
-            
-            // decrypt asynchronously and update ui when ready
-            decrypt(msg.content, encryptionKey)
-              .then(decrypted => {
-                // check for markdown style image ![alt](url)
-                const mdImageRegex = /!\[.*?\]\((.*?)\)/;
-                const mdImageMatch = decrypted.match(mdImageRegex);
-                
-                if (mdImageMatch && mdImageMatch[1] && (mdImageMatch[1].startsWith('http://') || mdImageMatch[1].startsWith('https://'))) {
-                  // store image info in the message object
-                  msg.decryptedImage = mdImageMatch[1];
-                  msg.decryptedText = decrypted.replace(mdImageRegex, '');
-                } else {
-                  msg.decryptedText = decrypted;
-                }
-                
-                // trigger re-render
-                setMessages([...messages]);
-              })
-              .catch(() => {
-                msg.decryptedText = '[Decryption failed]';
-                setMessages([...messages]);
-              });
-            
-            // display cached decrypted content if available
-            if (msg.decryptedImage) {
-              displayContent = (
-                <div>
-                  <img src={msg.decryptedImage} alt="Image" style="max-width: 200px; max-height: 200px;" />
-                  <div>{msg.decryptedText}</div>
-                </div>
-              );
-            } else if (msg.decryptedText) {
-              displayContent = msg.decryptedText;
-            }
-          }
-          
-          return (
-            <div key={msg.id} class="message">
-              <div class="messageHeader">
-                <strong
-                  onClick={() => {
-                    setMessage(message + `@${msg.tags.find(t => t[0] === 'n') ? msg.tags.find(t => t[0] === 'n')[1] : 'anon'}#${msg.pubkey.slice(-4)} `);
-                  }}
-                  style={`cursor: pointer; color: ${getUserColor(msg.pubkey)};`}
-                >
-                  @{msg.tags.find(t => t[0] === 'n') ? msg.tags.find(t => t[0] === 'n')[1] : 'anon'}#{msg.pubkey.slice(-4)}
-                </strong>
-                <span>{msg.time}</span>
-                {isEncrypted && (<div style="display: flex;"><Lock size={14} style="margin-left: 0;" /></div>)}
-                {msg.tags.some(t => t[0] === 'nonce') && (<div style="display: flex;"><Pickaxe size={14} style="margin-left: 0;" /></div>)}
-                {msg.pubkey !== pk && (
-                  <Copy 
-                    size={14} 
-                    style="cursor: pointer;"
-                    onClick={() => {
-                      // navigator.clipboard.writeText(msg.pubkey).then(() => {
-                      navigator.clipboard.writeText(hexToNpub(msg.pubkey)).then(() => {
-                        alert('Npub copied to clipboard.');
-                      })
-                    }}
-                  />
-                )}
-                {msg.pubkey === pk && (
-                  <Trash2 
-                    size={14} 
-                    style="cursor: pointer;"
-                    onClick={() => deleteEvent(msg.id)}
-                  />
-                )}
-              </div>
-              <div class="messageContent">
-                {displayContent}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div class="buttonContainer">
-        <div>
-          <button
-            onClick={() => setSettingsOpen(true)}
-          >
-            <Settings size={16} />
-          </button>
-        </div>
-        <div>
-          <button
-            onClick={() => {
-              setDmTabOpen(true);
-            }}
-          >
-            <Inbox size={16} />
-          </button>
-        </div>
-        <div>
-          <button
-            onClick={() => setexploreTabOpen(true)}
-          >
-            <Telescope size={16} />
-          </button>
-        </div>
-        <div>
-          <button
-            onClick={() => setMarketTabOpen(true)}
-          >
-            <ShoppingCart size={16} />
-          </button>
-        </div>
-        <div>
-          <form onSubmit={(e) => { e.preventDefault(); changeChannel(); }} style="margin-bottom: 0px;">
-            <select 
-              value={channel} 
-              onChange={(e) => setChannel(e.target.value)}
-              style="max-width: 100px;"
-            >
-              {!config.kind1Channels.includes(channel) && !config.kind20000Channels.includes(channel) && (
-                <>
-                  <option value={channel}>#{channel}</option>
-                  <option disabled>──────────</option>
-                </>
-              )}
-              <option disabled>Kind 1:</option>
-              {config.kind1Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
-                <option value={ch}>#{ch}</option>
-              ))}
-              <option disabled>Kind 20000/23333:</option>
-              {config.kind20000Channels.filter(ch => !config.favoriteChannels.includes(ch)).map(ch => (
-                <option value={ch}>#{ch}</option>
-              ))}
-            </select>
-          </form>
-        </div>
-        {mining && (
-          <div>
-            {/* <span>Mining PoW...</span> */}
-            <Pickaxe 
-              size={16} 
-              class="miningIcon" 
-            />
-          </div>
-        )}
-      </div>
-      <div class="userInputContainer">
-        <form onSubmit={(e) => { e.preventDefault(); send(); }}>
-          <button
-            type="button"
-            onClick={() => {
-              const imageUrl = prompt('Note: Only displays if e2ee is enabled.\n\nEnter image URL (must start with http:// or https://):');
-              if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
-                setMessage(message + ` ![Image](${imageUrl})`);
-              }
-            }}
-            class="sendButton"
-            style="width: 44px; border-left: 1px solid #ccc; border-right: none;"
-          >
-            <Image size={16} />
-          </button>
-          <input
-            ref={inputRef}
-            type="text"
-            value={message}
-            onInput={(e) => setMessage(e.target.value)}
-            placeholder="Message"
-            class=""
-          />
-          <button 
-            type="button"
-            onMouseDown={(e) => { e.preventDefault(); }}
-            onTouchStart={(e) => { e.preventDefault(); send(); }}
-            // onClick={() => { send(); }}
-            class="sendButton"
-          >
-            <SendHorizontal size={16} />
-          </button>
-        </form>
-      </div>
-    </section>
+    <ChatTab 
+      config={config}
+      sk={sk}
+      pk={pk}
+      handle={handle}
+      setHandle={setHandle}
+      channel={channel}
+      setChannel={setChannel}
+      chatProtocol={chatProtocol}
+      setChatProtocol={setChatProtocol}
+      message={message}
+      setMessage={setMessage}
+      messages={messages}
+      mining={mining}
+      e2eEnabled={e2eEnabled}
+      setE2eEnabled={setE2eEnabled}
+      encryptionKey={encryptionKey}
+      inputRef={inputRef}
+      send={send}
+      getUserColor={getUserColor}
+      deleteEvent={deleteEvent}
+      setSettingsOpen={setSettingsOpen}
+      setexploreTabOpen={setexploreTabOpen}
+      setMarketTabOpen={setMarketTabOpen}
+      setDmTabOpen={setDmTabOpen}
+    />
   );
 }
 
