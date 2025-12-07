@@ -45,10 +45,10 @@ const config = {
     ],
     dm: [
       // 'wss://economics-grain-soup-diana.trycloudflare.com',
-      // 'wss://relay.mostr.pub',
+      'wss://relay.mostr.pub',
       'wss://relay.damus.io',
       // 'wss://relay.primal.net',
-      // 'wss://nos.lol',
+      'wss://nos.lol',
     ]
   },
   kind1Channels: ['nostr', 'tech', 'news', 'politics', 'netsequé'],
