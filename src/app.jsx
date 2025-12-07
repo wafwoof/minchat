@@ -649,6 +649,7 @@ export default function App() {
       message={message}
       setMessage={setMessage}
       messages={messages}
+      setMessages={setMessages}
       mining={mining}
       e2eEnabled={e2eEnabled}
       setE2eEnabled={setE2eEnabled}

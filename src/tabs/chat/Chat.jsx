@@ -32,6 +32,7 @@ export default function ChatTab({
   setexploreTabOpen,
   setDmTabOpen,
   setMarketTabOpen,
+  unreadDmCount,
 }) {
   return (
     <section class="appContainer">
@@ -114,7 +115,8 @@ export default function ChatTab({
                 // trigger re-render
                 setMessages([...messages]);
               })
-              .catch(() => {
+              .catch((error) => {
+                console.error('Failed to decrypt message:', error);
                 msg.decryptedText = '[Decryption failed]';
                 setMessages([...messages]);
               });

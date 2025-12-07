@@ -47,7 +47,7 @@ const decrypt = async (encryptedMessage, key) => {
     return decoder.decode(decrypted);
   } catch (error) {
     console.error('Decryption failed:', error);
-    return '[Decryption failed]';
+    throw error;
   }
 };
 
