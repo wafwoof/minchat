@@ -256,8 +256,15 @@
   border-top: 1px solid #333;
 }
 
-.userInputContainer.mobile {
+/* .userInputContainer.mobile {
   padding-bottom: calc(0px + env(safe-area-inset-bottom));
+} */
+
+@media screen and (max-width: 600px) {
+  .userInputContainer {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
 }
 
 .userInputContainer form {

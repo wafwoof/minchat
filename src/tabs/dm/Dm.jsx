@@ -507,7 +507,7 @@ export default function DmTab({
         <div 
           class={`${styles.messagesPanel} ${isMobile && selectedConversation && !showConversationsList ? styles.active : ''}`}
         >
-          {selectedConversation ? (
+          {selectedConversation && (
             <>
               <div 
                 class={styles.messagesContainer}
@@ -549,10 +549,6 @@ export default function DmTab({
                 </form>
               </div>
             </>
-          ) : (
-            <div class={styles.emptyStateContainer}>
-              {isMobile ? 'Select a conversation' : 'Select a conversation to start'}
-            </div>
           )}
         </div>
       </div>

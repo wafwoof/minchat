@@ -12,7 +12,7 @@ import MarketTab from './tabs/market/Market.jsx';
 import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
-  version: '0.0.6',
+  version: '0.0.7',
   revision: '2025-12-06',
   simplePool: { 
     enablePing: false, 
