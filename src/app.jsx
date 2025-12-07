@@ -14,16 +14,14 @@ import DmTab from './tabs/dm/Dm.jsx';
 
 const config = {
   version: '0.0.6',
-  revision: '2025-10-18',
+  revision: '2025-12-06',
   simplePool: { 
     enablePing: false, 
     enableReconnect: true 
   },
   relays: {
     main: [
-      'wss://economics-grain-soup-diana.trycloudflare.com',
-      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      // 'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://relay.damus.io', 
       'wss://relay.nostr.band', 
       'wss://nostr-relay.zimage.com',
@@ -32,17 +30,13 @@ const config = {
       // 'wss://relay-testnet.k8s.layer3.news'
     ],
     wiki: [
-      'wss://economics-grain-soup-diana.trycloudflare.com',
-      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      // 'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://nos.lol',
       'wss://relay.wikifreedia.xyz',
       'wss://relay.nostr.band',
     ],
     market: [
-      'wss://economics-grain-soup-diana.trycloudflare.com',
-      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      // 'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://economics-grain-soup-diana.trycloudflare.com',
       'wss://relay.damus.io',
       'wss://nos.lol',
       'wss://purplepag.es',
@@ -50,9 +44,7 @@ const config = {
       'wss://relay.nostr.band'
     ],
     dm: [
-      'wss://economics-grain-soup-diana.trycloudflare.com',
-      // 'wss://tr7b9d5l-8080.usw2.devtunnels.ms',
-      // 'wss://commission-collect-shore-genius.trycloudflare.com',
+      // 'wss://economics-grain-soup-diana.trycloudflare.com',
       // 'wss://relay.mostr.pub',
       'wss://relay.damus.io',
       // 'wss://relay.primal.net',

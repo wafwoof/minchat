@@ -1,3 +1,4 @@
+import styles from './Dm.module.css';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { X, SendHorizontal, User, MessageCircle, ArrowLeft, UserPlus, Check } from 'lucide-preact';
 import { nip17, nip19 } from 'nostr-tools';
@@ -40,6 +41,10 @@ export default function DmTab({
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isEditingHandle, setIsEditingHandle] = useState(false);
   const [editHandleValue, setEditHandleValue] = useState('');
+  const [unreadCounts, setUnreadCounts] = useState(() => {
+    const saved = localStorage.getItem('minchat-dm-unread-counts');
+    return saved ? JSON.parse(saved) : {};
+  });
   const subRef = useRef(null);
   const globalSubRef = useRef(null);
 
@@ -60,11 +65,21 @@ export default function DmTab({
   }, [messages]);
 
   useEffect(() => {
+    localStorage.setItem('minchat-dm-unread-counts', JSON.stringify(unreadCounts));
+  }, [unreadCounts]);
+
+  useEffect(() => {
     if (selectedConversation) {
       loadMessages();
       if (isMobile) {
         setShowConversationsList(false);
       }
+      // mark conversation as read
+      setUnreadCounts(prev => {
+        const updated = { ...prev };
+        delete updated[selectedConversation.pubkey];
+        return updated;
+      });
     }
     return () => {
       if (subRef.current) subRef.current.close();
@@ -88,6 +103,39 @@ export default function DmTab({
             
             if (rumor.kind !== 14) return;
 
+            const newMessage = {
+              id: rumor.id || event.id,
+              pubkey: rumor.pubkey,
+              content: rumor.content,
+              time: new Date(rumor.created_at * 1000).toLocaleTimeString(),
+              created_at: rumor.created_at,
+              isSelf: false
+            };
+
+            // Check if message already exists before updating anything
+            let isNewMessage = false;
+            setMessages(prev => {
+              const conversationMessages = prev[rumor.pubkey] || [];
+              isNewMessage = !conversationMessages.some(msg => msg.id === newMessage.id);
+              
+              if (!isNewMessage) {
+                return prev;
+              }
+              
+              return {
+                ...prev,
+                [rumor.pubkey]: [...conversationMessages, newMessage].sort((a, b) => a.created_at - b.created_at)
+              };
+            });
+
+            // Only mark as unread if it's a NEW message and not from selected conversation
+            if (isNewMessage && (!selectedConversation || selectedConversation.pubkey !== rumor.pubkey)) {
+              setUnreadCounts(prev => ({
+                ...prev,
+                [rumor.pubkey]: (prev[rumor.pubkey] || 0) + 1
+              }));
+            }
+
             // update conversations list
             setConversations(prev => {
               const exists = prev.find(c => c.pubkey === rumor.pubkey);
@@ -110,27 +158,6 @@ export default function DmTab({
                 );
               }
               return prev;
-            });
-
-            // update messages state
-            const newMessage = {
-              id: rumor.id || event.id,
-              pubkey: rumor.pubkey,
-              content: rumor.content,
-              time: new Date(rumor.created_at * 1000).toLocaleTimeString(),
-              created_at: rumor.created_at,
-              isSelf: false
-            };
-
-            setMessages(prev => {
-              const conversationMessages = prev[rumor.pubkey] || [];
-              if (conversationMessages.some(msg => msg.id === newMessage.id)) {
-                return prev;
-              }
-              return {
-                ...prev,
-                [rumor.pubkey]: [...conversationMessages, newMessage].sort((a, b) => a.created_at - b.created_at)
-              };
             });
           } catch (error) {
             console.error('Failed to unwrap gift wrap:', error);
@@ -170,8 +197,43 @@ export default function DmTab({
           const isFromSelectedConversation = rumor.pubkey === selectedConversation.pubkey;          
           // console.log('Is message from selected conversation?', isFromSelectedConversation);
           
+          const newMessage = {
+            id: rumor.id || event.id,
+            pubkey: rumor.pubkey,
+            content: rumor.content,
+            time: new Date(rumor.created_at * 1000).toLocaleTimeString(),
+            created_at: rumor.created_at,
+            isSelf: false
+          };
+
+          let isNewMessage = false;
+          setMessages(prev => {
+            const conversationKey = rumor.pubkey;
+            const conversationMessages = prev[conversationKey] || [];
+            
+            isNewMessage = !conversationMessages.some(msg => msg.id === newMessage.id);
+            
+            if (!isNewMessage) {
+              return prev;
+            }
+            
+            const updated = {
+              ...prev,
+              [conversationKey]: [...conversationMessages, newMessage].sort((a, b) => a.created_at - b.created_at)
+            };
+            
+            return updated;
+          });
+
+          // Only mark as unread if NEW message and not from selected conversation
+          if (isNewMessage && !isFromSelectedConversation) {
+            setUnreadCounts(prev => ({
+              ...prev,
+              [rumor.pubkey]: (prev[rumor.pubkey] || 0) + 1
+            }));
+          }
+
           if (!isFromSelectedConversation) {
-            // console.log('Message is from a different conversation:', rumor.pubkey);
             setConversations(prev => {
               const exists = prev.find(c => c.pubkey === rumor.pubkey);
               if (!exists) {
@@ -190,34 +252,6 @@ export default function DmTab({
               );
             });
           }
-          
-          const newMessage = {
-            id: rumor.id || event.id,
-            pubkey: rumor.pubkey,
-            content: rumor.content,
-            time: new Date(rumor.created_at * 1000).toLocaleTimeString(),
-            created_at: rumor.created_at,
-            isSelf: false
-          };
-          // console.log('Adding message to state:', newMessage);
-
-          setMessages(prev => {
-            const conversationKey = rumor.pubkey;
-            const conversationMessages = prev[conversationKey] || [];
-            
-            if (conversationMessages.some(msg => msg.id === newMessage.id)) {
-              // console.log('Duplicate message, skipping');
-              return prev;
-            }
-            
-            const updated = {
-              ...prev,
-              [conversationKey]: [...conversationMessages, newMessage].sort((a, b) => a.created_at - b.created_at)
-            };
-            
-            // console.log('Updated messages:', updated);
-            return updated;
-          });
           
           if (isFromSelectedConversation) {
             setConversations(prev => prev.map(c => 
@@ -359,17 +393,17 @@ export default function DmTab({
   return (
     <section class="appContainer">
       <div class="keyContainer">
-        <div class="left" style="display: flex; flex-direction: row; align-items: center;">
+        <div class={styles.leftHeader}>
           {isMobile && selectedConversation && !showConversationsList ? (
             <button
               onClick={backToConversations}
-              style="background: none; border: none; color: white; cursor: pointer; padding: 4px;"
+              class={styles.backButton}
             >
               <ArrowLeft size={16} />
             </button>
           ) : null}
           {isEditingHandle ? (
-            <div style="display: flex; align-items: center; margin-left: 8px;">
+            <div class={styles.editHandleContainer}>
               <input
                 type="text"
                 value={editHandleValue}
@@ -382,27 +416,19 @@ export default function DmTab({
                     setEditHandleValue('');
                   }
                 }}
-                style={`
-                  padding: 4px 8px;
-                  background: #111;
-                  border: 1px solid #333;
-                  color: white;
-                  font-size: 13px;
-                  font-family: inherit;
-                  ${isMobile ? 'font-size: 14px;' : ''}
-                `}
+                class={`${styles.editHandleInput} ${isMobile ? styles.mobile : ''}`}
                 autoFocus
               />
               <button
                 onClick={updateConversationHandle}
-                style="margin-left: 4px; padding: 4px 8px; cursor: pointer;"
+                class={styles.editHandleButton}
                 title="Save"
               >
                 <Check size={14} />
               </button>
               <button
                 onClick={() => { setIsEditingHandle(false); setEditHandleValue(''); }}
-                style="margin-left: 4px; padding: 4px 8px; cursor: pointer;"
+                class={styles.editHandleButton}
                 title="Cancel"
               >
                 <X size={14} />
@@ -410,7 +436,7 @@ export default function DmTab({
             </div>
           ) : (
             <span 
-              style="cursor: pointer; padding: 4px 0 0 4px;"
+              class={styles.handleDisplay}
               onClick={startEditingHandle}
               title="Click to edit handle"
             >
@@ -424,89 +450,53 @@ export default function DmTab({
         <div class="right">
           <button
             onClick={() => setDmTabOpen(false)}
-            style="background: none; border: none; color: white; cursor: pointer; padding: 8px 8px 0 0;"
+            class={styles.closeButton}
           >
             <X size={18} />
           </button>
         </div>
       </div>
 
-      <div style={`display: flex; height: calc(100vh - 31px); width: 100%; ${isMobile ? 'flex-direction: column;' : ''}`}>
+      <div class={`${styles.mainContainer} ${isMobile ? styles.mobile : ''}`}>
         <div 
-          style={`
-            ${isMobile 
-              ? (showConversationsList || !selectedConversation ? 'display: block;' : 'display: none;') 
-              : 'width: 250px; border-right: 1px solid #333;'
-            } 
-            ${isMobile ? 'height: 100%;' : ''} 
-            overflow-y: auto;
-          `}
+          class={`${styles.conversationsPanel} ${isMobile ? `${styles.mobile} ${showConversationsList || !selectedConversation ? '' : styles.hidden}` : styles.desktop}`}
         >
           <div 
-            class="newConversationContainer"
-            style="display: flex; flex-direction: row; padding: 12px 8px; border-bottom: 1px solid #333;"
+            class={styles.newConversationContainer}
           >
             <input
               type="text"
               value={newRecipient}
               onInput={(e) => setNewRecipient(e.target.value)}
               placeholder="Enter the user's pubkey"
-              style={`
-                width: 100%; 
-                margin-bottom: 0px; 
-                padding: 8px; 
-                background: #111; 
-                border: 1px solid #333; 
-                color: white; 
-                border-radius: 0;
-                font-family: inherit;
-                ${isMobile ? 'font-size: 16px;' : ''}
-              `}
+              class={`${styles.newConversationInput} ${isMobile ? styles.mobile : ''}`}
             />
             <button
               onClick={addNewConversation}
-              style={`
-                width: 50px;
-                padding: 8px;
-                background: #333;
-                border: 1px solid #444;
-                color: white; 
-                border-radius: 0; 
-                cursor: pointer;
-                font-family: inherit;
-                ${isMobile ? 'font-size: 16px; touch-action: manipulation;' : ''}
-              `}
+              class={`${styles.addConversationButton} ${isMobile ? styles.mobile : ''}`}
             >
               <UserPlus size={16} />
             </button>
           </div>
           
-          {/* {conversations.map(conv => ( */}
           {conversations
           .sort((a, b) => b.timestamp - a.timestamp)
           .map(conv => (
             <div
               key={conv.pubkey}
               onClick={() => setSelectedConversation(conv)}
-              style={`
-                padding: 12px 8px; 
-                cursor: pointer; 
-                border-bottom: 1px solid #333;
-                background: ${selectedConversation?.pubkey === conv.pubkey ? '#2a2a2a' : 'transparent'};
-                touch-action: manipulation;
-              `}
+              class={`${styles.conversationItem} ${selectedConversation?.pubkey === conv.pubkey ? styles.active : ''}`}
             >
-              <div style={`font-weight: normal; margin-bottom: 2px; ${isMobile ? 'font-size: 14px;' : 'font-size: 13px;'}`}>
-                {conv.name}
+              <div class={`${styles.conversationItemHeader} ${isMobile ? styles.mobile : styles.desktop}`}>
+                <span>{conv.name}</span>
+                {unreadCounts[conv.pubkey] > 0 && (
+                  <div class={styles.unreadBadge}>
+                    {unreadCounts[conv.pubkey] > 99 ? '99+' : unreadCounts[conv.pubkey]}
+                  </div>
+                )}
               </div>
               {conv.lastMessage && (
-                <div style={`
-                  font-size: ${isMobile ? '13px' : '12px'}; 
-                  color: #666; 
-                  overflow: hidden; 
-                  text-overflow: ellipsis; 
-                  white-space: nowrap;
-                `}>
+                <div class={`${styles.conversationItemPreview} ${isMobile ? styles.mobile : ''}`}>
                   {conv.lastMessage}
                 </div>
               )}
@@ -515,68 +505,31 @@ export default function DmTab({
         </div>
 
         <div 
-          class="dmMessagesContainer"
-          style={`
-            flex: 1; 
-            display: flex; 
-            flex-direction: column;
-            ${isMobile 
-              ? (selectedConversation && !showConversationsList ? 'display: flex;' : 'display: none;') 
-              : ''
-            }
-          `}
+          class={`${styles.messagesPanel} ${isMobile && selectedConversation && !showConversationsList ? styles.active : ''}`}
         >
           {selectedConversation ? (
             <>
               <div 
-                class="messagesContainer" 
-                style={`
-                  max-height: calc(100dvh - 73px);
-                  flex: 1; 
-                  flex-direction: column;
-                  justify-content: flex-end;
-                  overflow-y: auto; 
-                  padding: 8px;
-                  border-top: none;
-                `}
+                class={styles.messagesContainer}
               >
                 {(messages[selectedConversation.pubkey] || []).map(msg => (
                   <div
                     key={msg.id}
-                    class="message"
-                    style={`
-                      margin-bottom: 8px;
-                      text-align: ${msg.isSelf ? 'right' : 'left'};
-                    `}
+                    class={`${styles.message} ${msg.isSelf ? styles.sent : styles.received}`}
                   >
                     <div
-                      style={`
-                        display: inline-block;
-                        max-width: ${isMobile ? '85%' : '70%'};
-                        padding: 8px;
-                        background: ${msg.isSelf ? '#2a2a2a' : '#222'};
-                        color: white;
-                        font-size: 14px;
-                        word-wrap: break-word;
-                      `}
+                      class={`${styles.messageBubble} ${msg.isSelf ? styles.sent : styles.received} ${isMobile ? styles.mobile : ''}`}
                     >
                       {msg.content}
                     </div>
-                    <div style={`
-                      font-size: 11px; 
-                      color: #555; 
-                      margin-top: 2px;
-                    `}>
+                    <div class={styles.messageTime}>
                       {msg.time}
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div class="userInputContainer" style={`
-                border-top: 1px solid #333;
-                ${isMobile ? 'padding-bottom: calc(0px + env(safe-area-inset-bottom));' : ''}
-              `}>
+              <div class={`${styles.userInputContainer} ${isMobile ? styles.mobile : ''}`}>
                 <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }}>
                   <input
                     type="text"
@@ -589,8 +542,7 @@ export default function DmTab({
                     type="button"
                     onMouseDown={(e) => { e.preventDefault(); }}
                     onTouchStart={(e) => { e.preventDefault(); sendMessage(); }}
-                    // onClick={() => { sendMessage(); }}
-                    class="sendButton"
+                    class={styles.sendButton}
                   >
                     <SendHorizontal size={16} />
                   </button>
@@ -598,16 +550,7 @@ export default function DmTab({
               </div>
             </>
           ) : (
-            <div style={`
-              flex: 1; 
-              display: flex; 
-              align-items: center; 
-              justify-content: center; 
-              color: #666;
-              padding: 20px;
-              text-align: center;
-              font-size: 13px;
-            `}>
+            <div class={styles.emptyStateContainer}>
               {isMobile ? 'Select a conversation' : 'Select a conversation to start'}
             </div>
           )}

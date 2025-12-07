@@ -105,11 +105,15 @@ input:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 .keyContainer .right {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+.keyContainer .right span {
+  cursor: default;
 }
 
 .messagesContainer {

@@ -32,7 +32,6 @@ export default function ChatTab({
   setexploreTabOpen,
   setDmTabOpen,
   setMarketTabOpen,
-  unreadDmCount,
 }) {
   return (
     <section class="appContainer">
