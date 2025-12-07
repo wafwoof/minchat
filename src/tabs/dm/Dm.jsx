@@ -15,19 +15,19 @@ export default function DmTab({
       return JSON.parse(saved);
     }
     
-    // pre-populate with default conversation
-    try {
-      const defaultPubkey = nip19.decode('npub12hva8marxu56mlycsnfhhlnc4yexehhf2r0tzayyxcs2mz07nu0sklwvrh').data;
-      return [{
-        pubkey: defaultPubkey,
-        name: `Minchat#${defaultPubkey.slice(-4)}`,
-        lastMessage: "Official Minchat Account.",
-        timestamp: Date.now()
-      }];
-    } catch (error) {
-      console.error('Failed to decode default npub:', error);
-      return [];
-    }
+    // // pre-populate with default conversation
+    // try {
+    //   const defaultPubkey = nip19.decode('npub12hva8marxu56mlycsnfhhlnc4yexehhf2r0tzayyxcs2mz07nu0sklwvrh').data;
+    //   return [{
+    //     pubkey: defaultPubkey,
+    //     name: `Minchat#${defaultPubkey.slice(-4)}`,
+    //     lastMessage: "Official Minchat Account.",
+    //     timestamp: Date.now()
+    //   }];
+    // } catch (error) {
+    //   console.error('Failed to decode default npub:', error);
+    //   return [];
+    // }
   });
   
   const [selectedConversation, setSelectedConversation] = useState(null);

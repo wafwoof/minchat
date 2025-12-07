@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Analytics } from "@vercel/analytics/react";
 import { generateSecretKey, getPublicKey, finalizeEvent, SimplePool, nip13 } from 'nostr-tools';
 import { encrypt, decrypt, hexToNpub } from './encryption.js';
-// import { Lock, Settings, SendHorizontal, Pickaxe, Image, Telescope, ShoppingCart, Inbox, Copy, Trash2 } from 'lucide-preact';
 import ChatTab from './tabs/chat/Chat.jsx';
 import LanderTab from './tabs/lander/Lander.jsx';
 import SettingsTab from './tabs/settings/Settings.jsx';
@@ -293,6 +292,9 @@ export default function App() {
           console.log('Event:', event);
           const date = new Date(event.created_at * 1000);
           setMessages(prev => {
+            // check if we already have this message
+            const existingIndex = prev.findIndex(msg => msg.id === event.id);
+            
             const newMessage = {
               id: event.id,
               pubkey: event.pubkey,
@@ -301,9 +303,15 @@ export default function App() {
               time: date.toLocaleTimeString(),
               created_at: event.created_at
             };
-            if (prev.some(msg => msg.id === newMessage.id)) {
-              return prev;
+            
+            // if we already have this message, remove the isLocalOnly flag if it exists
+            if (existingIndex !== -1) {
+              const updated = [...prev];
+              updated[existingIndex] = { ...updated[existingIndex], isLocalOnly: false };
+              return updated.sort((m1, m2) => m2.created_at - m1.created_at);
             }
+            
+            // otherwise add the new message
             return [...prev, newMessage].sort((m1, m2) => m2.created_at - m1.created_at);
           });
         }
@@ -392,6 +400,20 @@ export default function App() {
     if (!poolRef.current) {
       poolRef.current = new SimplePool(config.simplePool);
     }
+
+    // add message to local state immediately to prevent gaps
+    const date = new Date(signed.created_at * 1000);
+    const localMessage = {
+      id: signed.id,
+      pubkey: signed.pubkey,
+      content: messageContent,
+      tags: signed.tags,
+      time: date.toLocaleTimeString(),
+      created_at: signed.created_at,
+      isLocalOnly: true  // mark as local to prevent duplication when relay sends it back
+    };
+    
+    setMessages(prev => [...prev, localMessage].sort((m1, m2) => m2.created_at - m1.created_at));
 
     try {
       await poolRef.current.publish(relays.main, signed);

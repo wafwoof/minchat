@@ -13,7 +13,8 @@
     "lucide-preact": "^0.544.0",
     "ngeohash": "^0.6.3",
     "nostr-tools": "^2.17.0",
-    "preact": "^10.27.2"
+    "preact": "^10.27.2",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
